@@ -83,8 +83,21 @@ document.addEventListener("DOMContentLoaded", () => {
             items.forEach(item => {
                 const opt = document.createElement("option");
                 opt.value = item.item_number;
-                opt.textContent = `${item.item_number} - ${item.product_name}`;
+                
+                let label = `${item.item_number} - ${item.product_name}`;
+                if (item.tx_count > 5) {
+                    label += " ⭐ (>5 tx)";
+                }
+                
+                opt.textContent = label;
                 select.appendChild(opt);
+            });
+            
+            // Initialize Select2 on the dropdown
+            $(select).select2({
+                placeholder: "-- Select an item to forecast --",
+                allowClear: true,
+                width: '100%'
             });
         } catch (e) {
             console.error("Error loading items:", e);

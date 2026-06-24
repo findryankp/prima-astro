@@ -38,11 +38,24 @@ def predict_needs_tool(item_query: str) -> str:
     """Useful to statistically predict how many units of an item will be needed in the next 30 days. Input should be the item name or number."""
     return analytics.predict_monthly_needs(item_query)
 
-# Configure Local LLM with Ollama
-local_llm = LLM(
-    model="ollama/llama3.1",
-    base_url="http://localhost:11434"
-)
+# Load environment variables
+from dotenv import load_dotenv
+load_dotenv()
+
+llm_provider = os.getenv("LLM_PROVIDER", "ollama").lower()
+
+if llm_provider == "gemini":
+    # Configure LLM with Gemini using CrewAI's native LLM (via litellm)
+    selected_llm = LLM(
+        model="gemini/gemini-2.5-flash",
+        temperature=0.5
+    )
+else:
+    # Configure Local LLM with Ollama
+    selected_llm = LLM(
+        model="ollama/llama3.1",
+        base_url="http://localhost:11434"
+    )
 
 # Define Agent
 sparepart_agent = Agent(
@@ -53,7 +66,7 @@ sparepart_agent = Agent(
               "You must use the provided tools to query the database. Do not guess stock values.",
     verbose=True,
     allow_delegation=False,
-    llm=local_llm,
+    llm=selected_llm,
     tools=[
         check_stock_tool, 
         low_stock_tool, 

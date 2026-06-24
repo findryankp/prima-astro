@@ -148,8 +148,8 @@ def get_forecast_data(item_query):
             "status": "success",
             "product_name": df['product_name'].iloc[0],
             "dates": merged['ds'].tolist(),
-            "actual": merged['y'].where(pd.notnull(merged['y']), None).tolist(),
-            "predicted": merged['yhat'].round(2).tolist()
+            "actual": [None if pd.isna(v) else float(v) for v in merged['y']],
+            "predicted": [None if pd.isna(v) else round(float(v), 2) for v in merged['yhat']]
         }
     except Exception as e:
         return {"status": "error", "message": f"Error running forecast: {str(e)}"}

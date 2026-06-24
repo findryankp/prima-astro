@@ -75,7 +75,7 @@ async def get_low_stock():
     """
     df = pd.read_sql_query(sql, conn)
     conn.close()
-    return df.to_dict(orient="records")
+    return df.where(pd.notnull(df), None).to_dict(orient="records")
 
 @app.get("/api/transactions/recent")
 async def get_recent_transactions():
@@ -89,16 +89,25 @@ async def get_recent_transactions():
     """
     df = pd.read_sql_query(sql, conn)
     conn.close()
-    return df.to_dict(orient="records")
+    return df.where(pd.notnull(df), None).to_dict(orient="records")
 
 @app.get("/api/items")
 async def get_items():
     """Returns a list of all distinct sparepart items for dropdowns"""
     conn = sqlite3.connect(DB_NAME)
-    sql = "SELECT item_number, product_name FROM spareparts ORDER BY product_name ASC"
+    sql = """
+    SELECT 
+        s.item_number, 
+        s.product_name, 
+        COUNT(t.id) as tx_count
+    FROM spareparts s
+    LEFT JOIN transactions t ON s.item_number = t.item_number
+    GROUP BY s.item_number, s.product_name
+    ORDER BY s.product_name ASC
+    """
     df = pd.read_sql_query(sql, conn)
     conn.close()
-    return df.to_dict(orient="records")
+    return df.where(pd.notnull(df), None).to_dict(orient="records")
 
 @app.get("/api/forecast/{item_query}")
 async def get_forecast(item_query: str):
