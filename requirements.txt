@@ -1,9 +1,12 @@
 crewai
+crewai[tools]
 langchain-google-genai
+litellm
 python-telegram-bot
 pandas
 sqlalchemy
 prophet
+plotly
 python-dotenv
 fastapi
 uvicorn
