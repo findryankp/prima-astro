@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic AI | Sparepart Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar glass-panel">
+            <div class="logo">
+                <h2>⚙️ Agentic<span>AI</span></h2>
+            </div>
+            <nav>
+                <ul>
+                    <li class="active" id="nav-dashboard">Dashboard</li>
+                    <li id="nav-chat">AI Assistant</li>
+                </ul>
+            </nav>
+            <div class="user-profile">
+                <div class="avatar">👨‍💻</div>
+                <div class="info">
+                    <p class="name">Admin</p>
+                    <p class="role">Sparepart Manager</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            
+            <!-- Dashboard View -->
+            <section id="view-dashboard" class="view-section active">
+                <header class="top-header">
+                    <h1>Overview</h1>
+                    <p>Real-time sparepart monitoring & analytics</p>
+                </header>
+
+                <!-- Metrics Cards -->
+                <div class="metrics-grid">
+                    <div class="metric-card glass-panel">
+                        <h3>Total Items</h3>
+                        <p class="value" id="stat-total">-</p>
+                    </div>
+                    <div class="metric-card glass-panel warning-card">
+                        <h3>Low Stock Alerts</h3>
+                        <p class="value" id="stat-low">-</p>
+                    </div>
+                    <div class="metric-card glass-panel">
+                        <h3>Total Transactions</h3>
+                        <p class="value" id="stat-tx">-</p>
+                    </div>
+                </div>
+
+                <!-- Tables Grid -->
+                <div class="tables-grid">
+                    <div class="table-container glass-panel">
+                        <h3>⚠️ Low Stock Warnings</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Item Number</th>
+                                    <th>Product Name</th>
+                                    <th>SOH</th>
+                                    <th>Safety</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-low-stock">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="table-container glass-panel">
+                        <h3>🔄 Recent Outgoing</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Product</th>
+                                    <th>Qty</th>
+                                    <th>Dept</th>
+                                    <th>PIC</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-recent-tx">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Chatbot View -->
+            <section id="view-chat" class="view-section">
+                <header class="top-header">
+                    <h1>AI Assistant</h1>
+                    <p>Ask anything about inventory, trends, or predictions</p>
+                </header>
+
+                <div class="chat-container glass-panel">
+                    <div class="chat-messages" id="chat-messages">
+                        <div class="message ai-message">
+                            <div class="bubble">Hello! I am your Agentic AI Sparepart Bot. 🤖<br><br>How can I help you today?</div>
+                        </div>
+                    </div>
+                    <div class="chat-input-area">
+                        <input type="text" id="chat-input" placeholder="Type your query here... (e.g., 'Cek stok PALU KARET')">
+                        <button id="send-btn">Send</button>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+    
+    <script src="/static/app.js"></script>
+</body>
+</html>

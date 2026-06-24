@@ -1,0 +1,9 @@
+crewai
+langchain-google-genai
+python-telegram-bot
+pandas
+sqlalchemy
+prophet
+python-dotenv
+fastapi
+uvicorn
