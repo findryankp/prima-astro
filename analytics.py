@@ -97,3 +97,59 @@ def predict_monthly_needs(item_query):
         return result
     except Exception as e:
         return f"Error running forecast: {str(e)}. (Fallback: Try 'analyze_sparepart_trend' instead)"
+
+def get_forecast_data(item_query):
+    """
+    Generate Prophet forecast and return raw data (dates, actuals, predicted) for charting.
+    """
+    conn = sqlite3.connect(DB_NAME)
+    query = f"%{item_query}%"
+    
+    sql = """
+    SELECT tanggal, qty_out, product_name
+    FROM transactions
+    WHERE product_name LIKE ? OR item_number LIKE ?
+    """
+    
+    df = pd.read_sql_query(sql, conn, params=(query, query))
+    conn.close()
+    
+    if df.empty or len(df) < 5:
+        return {"status": "error", "message": "Not enough historical data to forecast. Need at least 5 transactions."}
+        
+    df['tanggal'] = pd.to_datetime(df['tanggal'])
+    
+    # Group by date
+    daily_data = df.groupby(df['tanggal'].dt.date)['qty_out'].sum().reset_index()
+    daily_data.columns = ['ds', 'y']
+    
+    try:
+        m = Prophet(daily_seasonality=False, yearly_seasonality=False)
+        m.fit(daily_data)
+        
+        # Predict next 30 days
+        future = m.make_future_dataframe(periods=30)
+        forecast = m.predict(future)
+        
+        # Format the response for Chart.js
+        historical = daily_data.copy()
+        historical['ds'] = historical['ds'].astype(str)
+        
+        forecast_res = forecast[['ds', 'yhat']].copy()
+        # Prevent negative predictions
+        forecast_res['yhat'] = forecast_res['yhat'].clip(lower=0)
+        forecast_res['ds'] = forecast_res['ds'].dt.strftime('%Y-%m-%d')
+        
+        # Create continuous arrays for charting
+        # Merge historical and forecast on dates
+        merged = pd.merge(forecast_res, historical, on='ds', how='left')
+        
+        return {
+            "status": "success",
+            "product_name": df['product_name'].iloc[0],
+            "dates": merged['ds'].tolist(),
+            "actual": merged['y'].where(pd.notnull(merged['y']), None).tolist(),
+            "predicted": merged['yhat'].round(2).tolist()
+        }
+    except Exception as e:
+        return {"status": "error", "message": f"Error running forecast: {str(e)}"}

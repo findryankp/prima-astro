@@ -3,20 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agentic AI | Sparepart Dashboard</title>
+    <title>Prima Astro | Dashboard</title>
     <link rel="stylesheet" href="/static/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="app-container">
         <!-- Sidebar -->
         <aside class="sidebar glass-panel">
             <div class="logo">
-                <h2>⚙️ Agentic<span>AI</span></h2>
+                <h2>✨ Prima<span>Astro</span></h2>
             </div>
             <nav>
                 <ul>
                     <li class="active" id="nav-dashboard">Dashboard</li>
+                    <li id="nav-forecast">Forecasting</li>
                     <li id="nav-chat">AI Assistant</li>
                 </ul>
             </nav>
@@ -105,13 +107,37 @@
                 <div class="chat-container glass-panel">
                     <div class="chat-messages" id="chat-messages">
                         <div class="message ai-message">
-                            <div class="bubble">Hello! I am your Agentic AI Sparepart Bot. 🤖<br><br>How can I help you today?</div>
+                            <div class="bubble">Hello! I am your Prima Astro Assistant. ✨<br><br>How can I help you today?</div>
                         </div>
                     </div>
                     <div class="chat-input-area">
                         <input type="text" id="chat-input" placeholder="Type your query here... (e.g., 'Cek stok PALU KARET')">
                         <button id="send-btn">Send</button>
                     </div>
+                </div>
+            </section>
+
+
+            <!-- Forecasting View -->
+            <section id="view-forecast" class="view-section">
+                <header class="top-header">
+                    <h1>Demand Forecasting</h1>
+                    <p>AI-powered future needs prediction using Prophet</p>
+                </header>
+
+                <div class="forecast-controls glass-panel">
+                    <select id="item-select" class="premium-select">
+                        <option value="">Loading items...</option>
+                    </select>
+                    <button id="btn-forecast" class="premium-btn">Generate Forecast</button>
+                </div>
+                
+                <div id="forecast-loading" style="display: none;" class="loading-state">
+                    <p>Calculating Prophet forecast... ✨</p>
+                </div>
+
+                <div class="chart-container glass-panel" style="margin-top: 20px; position: relative; height: 50vh;">
+                    <canvas id="forecastChart"></canvas>
                 </div>
             </section>
 

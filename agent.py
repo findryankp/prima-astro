@@ -40,7 +40,7 @@ def predict_needs_tool(item_query: str) -> str:
 
 # Configure Local LLM with Ollama
 local_llm = LLM(
-    model="ollama/llama3",
+    model="ollama/llama3.1",
     base_url="http://localhost:11434"
 )
 
