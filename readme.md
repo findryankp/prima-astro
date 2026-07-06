@@ -74,7 +74,20 @@ Jalankan script migrasi untuk mengubah file JSON mentah menjadi database SQLite:
 python database.py
 ```
 
-### 6. (Opsional) Install Ollama — Jika menggunakan LLM Lokal
+### 6. Siapkan Redis (Wajib — untuk Antrian Query)
+
+Web Dashboard dan Telegram Bot mengirim setiap pertanyaan AI Assistant ke antrian **Celery + Redis**, supaya keduanya diproses satu per satu (tidak nyerobot LLM secara bersamaan). Redis harus berjalan sebelum menjalankan aplikasi.
+
+- **Docker (paling mudah):**
+  ```powershell
+  docker run -d --name redis -p 6379:6379 redis
+  ```
+- **WSL:** `sudo apt install redis-server && redis-server`
+- **Windows native:** gunakan [Memurai](https://www.memurai.com/) (Redis-compatible untuk Windows)
+
+Konfigurasi broker/backend ada di `.env` (`CELERY_BROKER_URL`, `CELERY_RESULT_BACKEND`), default `redis://localhost:6379/0`.
+
+### 7. (Opsional) Install Ollama — Jika menggunakan LLM Lokal
 
 Langkah ini **hanya diperlukan** jika Anda memilih `LLM_PROVIDER=ollama` di file `.env`.
 
@@ -89,9 +102,20 @@ Langkah ini **hanya diperlukan** jika Anda memilih `LLM_PROVIDER=ollama` di file
 
 ## ▶️ Cara Menjalankan
 
-Pastikan Anda selalu berada di folder project dan **Virtual Environment sudah aktif** (`.\venv\Scripts\activate`).
+Pastikan Anda selalu berada di folder project, **Virtual Environment sudah aktif** (`.\venv\Scripts\activate`), dan **Redis sudah berjalan** (lihat langkah 6 di atas).
 
-### A. Web Dashboard & AI Chat (Browser)
+### A. Celery Worker (Wajib — jalankan pertama)
+
+Buka satu terminal khusus untuk worker yang memproses antrian query AI Assistant:
+
+```powershell
+.\venv\Scripts\activate
+celery -A celery_app worker --loglevel=info --pool=solo
+```
+
+> `--pool=solo` dipakai karena Celery `prefork` (default) tidak didukung di Windows.
+
+### B. Web Dashboard & AI Chat (Browser)
 
 ```powershell
 uvicorn api:app --reload
@@ -106,9 +130,9 @@ Fitur yang tersedia di dashboard:
 | **Forecasting** | Prediksi demand sparepart 30 hari ke depan (Prophet AI) |
 | **AI Assistant** | Chatbot cerdas untuk tanya jawab inventori |
 
-### B. Telegram Bot
+### C. Telegram Bot
 
-Buka terminal **baru** (terpisah dari web dashboard):
+Buka terminal **baru** (terpisah dari web dashboard & worker):
 
 ```powershell
 .\venv\Scripts\activate
@@ -117,7 +141,7 @@ python main.py
 
 Buka Telegram, cari bot Anda, dan mulai chat!
 
-> 💡 **Tips:** Anda bisa menjalankan Web Dashboard (A) dan Telegram Bot (B) secara bersamaan di terminal yang berbeda. Keduanya menggunakan database yang sama.
+> 💡 **Tips:** Anda perlu menjalankan Redis, Celery Worker (A), Web Dashboard (B), dan Telegram Bot (C) secara bersamaan di terminal yang berbeda. Semuanya berbagi antrian dan database yang sama, jadi setiap pertanyaan (dari web maupun Telegram) diproses satu per satu oleh worker.
 
 ---
 
@@ -127,7 +151,9 @@ Buka Telegram, cari bot Anda, dan mulai chat!
 agenticai/
 ├── api.py                 # FastAPI server (Web Dashboard + REST API)
 ├── main.py                # Telegram Bot entry point
-├── agent.py               # CrewAI Agent & Tools definition
+├── agent.py               # CrewAI Agents (Stock/Transaction/Analytics) & Tools
+├── celery_app.py          # Celery app config (Redis broker/backend)
+├── tasks.py               # Celery task that runs the CrewAI crew
 ├── analytics.py           # Trend analysis & Prophet forecasting
 ├── database.py            # Database migration script (JSON → SQLite)
 ├── stock_manager.py       # Stock checking logic

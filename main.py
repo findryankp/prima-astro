@@ -1,9 +1,10 @@
 import os
+import asyncio
 import logging
 from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
-from agent import process_user_query
+from tasks import process_query_task
 
 # Configure logging
 logging.basicConfig(
@@ -37,8 +38,12 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("🤔 Analyzing your request...")
     
     try:
-        # Pass the query to the CrewAI agent
-        response = process_user_query(user_query)
+        # Push the query onto the same Celery/Redis queue used by the Web
+        # Dashboard, so requests from both surfaces are processed one at a
+        # time. .get() is blocking, so run it in a worker thread to avoid
+        # freezing the bot's event loop.
+        async_result = process_query_task.delay(user_query)
+        response = await asyncio.to_thread(async_result.get, 180)
         await update.message.reply_text(response)
     except Exception as e:
         logging.error(f"Error processing query: {e}")

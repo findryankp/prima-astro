@@ -36,11 +36,20 @@ Dokumen ini menjelaskan secara lengkap bagaimana project **Prima Astro** bekerja
 │             └───────────────┬───────────────┘                       │
 │                             ▼                                       │
 │              ┌──────────────────────────┐                           │
-│              │   CrewAI Agent Engine     │                           │
+│              │  Celery Queue (Redis)     │                           │
+│              │  1 request diproses       │                           │
+│              │  satu per satu            │                           │
+│              └──────────┬───────────────┘                           │
+│                         ▼                                           │
+│              ┌──────────────────────────┐                           │
+│              │   CrewAI Crew Engine      │                           │
 │              │   (agent.py)             │                           │
 │              │                          │                           │
-│              │   Role: Sparepart        │                           │
-│              │   Inventory Specialist   │                           │
+│              │   Manager Agent (auto)   │                           │
+│              │   delegates ke:          │                           │
+│              │   • Stock Specialist     │                           │
+│              │   • Transaction Spec.    │                           │
+│              │   • Analytics Specialist │                           │
 │              └──────────┬───────────────┘                           │
 │                         │                                           │
 │          ┌──────────────┼──────────────────────┐                    │

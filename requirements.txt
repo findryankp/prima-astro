@@ -10,3 +10,5 @@ plotly
 python-dotenv
 fastapi
 uvicorn
+celery
+redis

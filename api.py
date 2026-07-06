@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import sqlite3
 import pandas as pd
-from agent import process_user_query
+from tasks import process_query_task
 from analytics import get_forecast_data
 
 app = FastAPI(title="Agentic AI Sparepart Dashboard API")
@@ -33,10 +33,17 @@ async def read_root():
         return f.read()
 
 @app.post("/api/chat")
-async def chat_api(req: ChatRequest):
-    """Endpoint for the Web Chatbot to interact with CrewAI"""
+def chat_api(req: ChatRequest):
+    """
+    Endpoint for the Web Chatbot to interact with CrewAI.
+    The query is pushed onto the Celery/Redis queue so it's processed
+    one-at-a-time alongside requests coming from the Telegram Bot, then we
+    block (in FastAPI's threadpool, since this is a sync def) until the
+    worker returns the result.
+    """
     try:
-        response = await process_user_query(req.message)
+        async_result = process_query_task.delay(req.message)
+        response = async_result.get(timeout=180)
         return {"status": "success", "response": response}
     except Exception as e:
         return {"status": "error", "response": f"An error occurred: {str(e)}"}
