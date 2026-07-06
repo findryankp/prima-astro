@@ -43,6 +43,12 @@ python -m venv venv
 pip install -r requirements.txt
 ```
 
+> 💡 **Catatan untuk Python v3.14+:**
+> Jika Anda menggunakan Python v3.14 atau yang lebih baru, jalankan instalasi dengan mengabaikan pembatasan versi Python agar dependency versi terbaru dapat teresolusi dengan benar:
+> ```powershell
+> pip install -r requirements.txt --ignore-requires-python
+> ```
+
 ### 4. Konfigurasi Environment Variables
 
 Copy file `.env.example` menjadi `.env`, lalu isi dengan konfigurasi Anda:
