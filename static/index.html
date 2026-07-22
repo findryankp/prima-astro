@@ -22,6 +22,7 @@
             <nav>
                 <ul>
                     <li class="active" id="nav-dashboard">Dashboard</li>
+                    <li id="nav-insight">Insight</li>
                     <li id="nav-forecast">Forecasting</li>
                     <li id="nav-chat">AI Assistant</li>
                 </ul>
@@ -96,6 +97,78 @@
                             <tbody id="table-recent-tx">
                                 <!-- Populated by JS -->
                             </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Insight View -->
+            <section id="view-insight" class="view-section">
+                <header class="top-header">
+                    <h1>AI Insight</h1>
+                    <p>Catalog-wide forecast & trend analysis (moving-average, updated as of latest data)</p>
+                </header>
+
+                <div class="metrics-grid">
+                    <div class="metric-card glass-panel">
+                        <h3>Forecasted Demand (Next 30 Days)</h3>
+                        <p class="value" id="insight-total-demand">-</p>
+                    </div>
+                    <div class="metric-card glass-panel warning-card">
+                        <h3>Items Needing Restock</h3>
+                        <p class="value" id="insight-restock-count">-</p>
+                    </div>
+                    <div class="metric-card glass-panel">
+                        <h3>As Of</h3>
+                        <p class="value" id="insight-as-of" style="font-size: 1.4rem;">-</p>
+                    </div>
+                </div>
+
+                <div class="tables-grid">
+                    <div class="table-container glass-panel">
+                        <h3>🚨 Restock Alerts</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>SOH</th>
+                                    <th>Avg/Day</th>
+                                    <th>Stockout In</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-restock-alerts"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="table-container glass-panel">
+                        <h3>📈 Trending Up</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Last <span class="window-days">30</span>d</th>
+                                    <th>Prev <span class="window-days">30</span>d</th>
+                                    <th>Change</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-trending-up"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tables-grid" style="margin-top: 20px;">
+                    <div class="table-container glass-panel">
+                        <h3>📉 Trending Down</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Last <span class="window-days">30</span>d</th>
+                                    <th>Prev <span class="window-days">30</span>d</th>
+                                    <th>Change</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-trending-down"></tbody>
                         </table>
                     </div>
                 </div>

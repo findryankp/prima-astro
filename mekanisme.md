@@ -23,7 +23,8 @@ Dokumen ini menjelaskan secara lengkap bagaimana project **Prima Astro** bekerja
 │                                                                     │
 │  ┌──────────────────────┐    ┌──────────────────────────────┐       │
 │  │  FastAPI Server       │    │  Telegram Bot (python-       │       │
-│  │  (api.py)             │    │  telegram-bot) (main.py)     │       │
+│  │  (app/delivery/http)  │    │  telegram-bot)               │       │
+│  │                       │    │  (app/delivery/telegram)     │       │
 │  │                       │    │                              │       │
 │  │  • GET  /             │    │  • /start command            │       │
 │  │  • POST /api/chat     │    │  • Text message handler      │       │
@@ -43,7 +44,7 @@ Dokumen ini menjelaskan secara lengkap bagaimana project **Prima Astro** bekerja
 │                         ▼                                           │
 │              ┌──────────────────────────┐                           │
 │              │   CrewAI Crew Engine      │                           │
-│              │   (agent.py)             │                           │
+│              │   (app/agent/crew.py)     │                           │
 │              │                          │                           │
 │              │   Manager Agent (auto)   │                           │
 │              │   delegates ke:          │                           │
@@ -51,12 +52,12 @@ Dokumen ini menjelaskan secara lengkap bagaimana project **Prima Astro** bekerja
 │              │   • Transaction Spec.    │                           │
 │              │   • Analytics Specialist │                           │
 │              └──────────┬───────────────┘                           │
-│                         │                                           │
+│                         │  (lewat app/agent/tools.py)                │
 │          ┌──────────────┼──────────────────────┐                    │
 │          ▼              ▼                      ▼                    │
 │  ┌──────────────┐ ┌───────────────┐  ┌────────────────┐            │
-│  │ stock_manager │ │ transaction_  │  │   analytics    │            │
-│  │    .py        │ │  manager.py   │  │     .py        │            │
+│  │ stock_        │ │ transaction_  │  │   analytics_   │            │
+│  │ usecase.py    │ │ usecase.py    │  │   usecase.py   │            │
 │  │              │ │               │  │                │            │
 │  │ • check_stock│ │ • view_outgo- │  │ • analyze_     │            │
 │  │ • get_low_   │ │   ing_stock   │  │   sparepart_   │            │
@@ -64,10 +65,13 @@ Dokumen ini menjelaskan secara lengkap bagaimana project **Prima Astro** bekerja
 │  │              │ │   users       │  │ • predict_     │            │
 │  │              │ │               │  │   monthly_needs│            │
 │  │              │ │               │  │ • get_forecast │            │
-│  │              │ │               │  │   _data        │            │
+│  │              │ │               │  │   _data / insights │        │
 │  └──────┬───────┘ └──────┬────────┘  └───────┬────────┘            │
 │         │                │                   │                      │
-└─────────┼────────────────┼───────────────────┼──────────────────────┘
+│         └────────────────┴───────────────────┘                      │
+│                          ▼ (app/repository/*.py — satu-satunya       │
+│                            layer yang menyentuh SQL)                 │
+└─────────────────────────────────────────────────────────────────────┘
           │                │                   │
           ▼                ▼                   ▼
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -203,12 +207,15 @@ Project ini menggunakan **CrewAI** sebagai framework orkestrasi AI. CrewAI terdi
 
 | Tool | File Sumber | Fungsi |
 |------|-------------|--------|
-| `Check Stock` | `stock_manager.py` | Mengecek sisa stok (SOH) suatu sparepart berdasarkan nama/nomor item |
-| `Get Low Stock Items` | `stock_manager.py` | Mengambil daftar barang dengan status WARNING atau DANGER |
-| `View Outgoing Stock` | `transaction_manager.py` | Melihat transaksi pengeluaran barang terbaru, bisa filter per departemen |
-| `Get Top Users of Item` | `transaction_manager.py` | Mencari departemen/PIC yang paling banyak menggunakan suatu item |
-| `Analyze Sparepart Trend` | `analytics.py` | Menganalisis tren penggunaan: total pemakaian, rata-rata harian, proyeksi bulanan |
-| `Predict Monthly Needs` | `analytics.py` | Memprediksi kebutuhan 30 hari ke depan menggunakan algoritma Prophet |
+| `Check Stock` | `app/usecase/stock_usecase.py` | Mengecek sisa stok (SOH) suatu sparepart berdasarkan nama/nomor item |
+| `Get Low Stock Items` | `app/usecase/stock_usecase.py` | Mengambil daftar barang dengan status WARNING atau DANGER |
+| `View Outgoing Stock` | `app/usecase/transaction_usecase.py` | Melihat transaksi pengeluaran barang terbaru, bisa filter per departemen |
+| `Get Top Users of Item` | `app/usecase/transaction_usecase.py` | Mencari departemen/PIC yang paling banyak menggunakan suatu item |
+| `Analyze Sparepart Trend` | `app/usecase/analytics_usecase.py` | Menganalisis tren penggunaan: total pemakaian, rata-rata harian, proyeksi bulanan |
+| `Predict Monthly Needs` | `app/usecase/analytics_usecase.py` | Memprediksi kebutuhan 30 hari ke depan menggunakan algoritma Prophet |
+| `Get Dashboard Insights` | `app/usecase/analytics_usecase.py` | Insight katalog: item butuh restock, trending naik/turun, total forecast demand (moving-average) |
+
+Tiap tool di atas hanyalah wrapper tipis (`app/agent/tools.py`) yang memanggil fungsi usecase yang sama persis dengan yang dipakai endpoint REST API — jadi chatbot dan dashboard REST selalu konsisten karena berbagi satu business logic.
 
 ---
 
@@ -301,7 +308,7 @@ User memilih item dari dropdown
 └──────────────────────┘                                   │
                                                            ▼
                                               ┌────────────────────┐
-                                              │  analytics.py       │
+                                              │  analytics_usecase  │
                                               │  get_forecast_data()│
                                               └─────────┬──────────┘
                                                         │

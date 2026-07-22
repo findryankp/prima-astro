@@ -153,18 +153,36 @@ Buka Telegram, cari bot Anda, dan mulai chat!
 
 ## 📁 Struktur Project
 
+Project ini disusun mirip **clean architecture** (layered), supaya lebih familiar untuk yang biasa dari Go/`internal/` style: setiap layer punya satu tanggung jawab, dan dependensinya cuma mengalir satu arah — `delivery` & `agent` → `usecase` → `repository` → DB.
+
 ```
 agenticai/
-├── api.py                 # FastAPI server (Web Dashboard + REST API)
-├── main.py                # Telegram Bot entry point
-├── agent.py               # CrewAI Agents (Stock/Transaction/Analytics) & Tools
-├── celery_app.py          # Celery app config (Redis broker/backend)
-├── tasks.py               # Celery task that runs the CrewAI crew
-├── analytics.py           # Trend analysis & Prophet forecasting
-├── database.py            # Database migration script (JSON → SQLite)
-├── stock_manager.py       # Stock checking logic
-├── transaction_manager.py # Transaction query logic
+├── api.py                 # Entrypoint tipis: `uvicorn api:app` → re-export app/delivery/http/api.py
+├── main.py                # Entrypoint tipis: `python main.py` → app/delivery/telegram/bot.py
+├── celery_app.py          # Entrypoint tipis: `celery -A celery_app worker` → app/delivery/worker/celery_app.py
+├── database.py            # Script migrasi JSON → SQLite (dijalankan manual, bukan bagian dari app)
 ├── sparepart.db           # SQLite database (generated)
+│
+├── app/
+│   ├── config.py           # Load .env, pilihan LLM provider, konstanta (DB_NAME, Celery URL, dst)
+│   ├── domain/
+│   │   └── entities.py     # Struct/dataclass inti: Sparepart, Transaction
+│   ├── repository/         # Satu-satunya layer yang menyentuh SQL/SQLite
+│   │   ├── sparepart_repository.py
+│   │   └── transaction_repository.py
+│   ├── usecase/            # Business logic (tidak tahu soal HTTP/Celery/Telegram/CrewAI)
+│   │   ├── stock_usecase.py
+│   │   ├── transaction_usecase.py
+│   │   ├── analytics_usecase.py    # Prophet forecast + insight (moving-average) — lihat detail di mekanisme.md
+│   │   └── dashboard_usecase.py
+│   ├── agent/               # CrewAI: agent-agent spesialis + tools, tiap tool cuma manggil usecase
+│   │   ├── tools.py
+│   │   └── crew.py          # Manager agent (hierarchical) + Stock/Transaction/Analytics specialist agents
+│   └── delivery/            # Semua cara masuk ke usecase yang sama
+│       ├── http/api.py      # FastAPI routes
+│       ├── telegram/bot.py  # Telegram handlers
+│       └── worker/          # celery_app.py (Redis broker/backend) + tasks.py (Celery task)
+│
 ├── requirements.txt       # Python dependencies
 ├── .env.example           # Template environment variables
 ├── .env                   # Environment variables (tidak di-commit)
@@ -173,6 +191,12 @@ agenticai/
     ├── style.css           # Dashboard styling (dark theme)
     └── app.js              # Dashboard frontend logic
 ```
+
+**Alur dependensi (mirip Go `cmd/` → `internal/`):**
+- `delivery/http`, `delivery/telegram`, `delivery/worker`, dan `agent` semuanya cuma memanggil `usecase/*` — tidak ada satupun yang menyentuh SQL langsung.
+- `usecase/*` memanggil `repository/*` untuk data, tidak pernah `sqlite3.connect` sendiri.
+- `repository/*` adalah satu-satunya tempat query SQL ditulis.
+- Kalau mau ganti dari SQLite ke database lain, cukup ubah isi `repository/`, layer di atasnya tidak perlu berubah.
 
 ---
 

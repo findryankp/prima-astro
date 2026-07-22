@@ -228,6 +228,8 @@ th {
 
 td.status-warning { color: var(--warning); font-weight: 600; }
 td.status-danger { color: var(--danger); font-weight: 600; }
+td.trend-up { color: var(--success); font-weight: 600; }
+td.trend-down { color: var(--danger); font-weight: 600; }
 
 /* Chatbot Interface */
 .chat-container {
