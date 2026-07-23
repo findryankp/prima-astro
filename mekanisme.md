@@ -8,106 +8,101 @@ Dokumen ini menjelaskan secara lengkap bagaimana project **Prima Astro** bekerja
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                        USER INTERFACE LAYER                        │
+│                        USER INTERFACE LAYER                         │
 │                                                                     │
-│  ┌──────────────┐   ┌──────────────┐   ┌──────────────────────┐    │
-│  │  Web Browser  │   │   Telegram    │   │   REST API Client    │    │
-│  │  (Dashboard)  │   │     App       │   │   (Postman, dll)     │    │
-│  └──────┬───────┘   └──────┬───────┘   └──────────┬───────────┘    │
-│         │                  │                       │                │
-└─────────┼──────────────────┼───────────────────────┼────────────────┘
-          │                  │                       │
-          ▼                  ▼                       ▼
+│    ┌─────────────┐ ┌───────────────┐     ┌─────────────┐            │
+│    │ Web Browser │ │REST API Client│     │ Telegram App│            │
+│    │ (Dashboard) │ │(Postman, dll) │     │             │            │
+│    └──────┬──────┘ └───────┬───────┘     └──────┬──────┘            │
+│           │                │                    │                   │
+└───────────┼────────────────┼────────────────────┼───────────────────┘
+            │                │                    │
+            └───────┬────────┘                    │
+                    ▼                             ▼
 ┌─────────────────────────────────────────────────────────────────────┐
 │                        APPLICATION LAYER                            │
 │                                                                     │
-│  ┌──────────────────────┐    ┌──────────────────────────────┐       │
-│  │  FastAPI Server       │    │  Telegram Bot (python-       │       │
-│  │  (app/delivery/http)  │    │  telegram-bot)               │       │
-│  │                       │    │  (app/delivery/telegram)     │       │
-│  │                       │    │                              │       │
-│  │  • GET  /             │    │  • /start command            │       │
-│  │  • POST /api/chat     │    │  • Text message handler      │       │
-│  │  • GET  /api/dashboard│    │                              │       │
-│  │  • GET  /api/stock    │    │                              │       │
-│  │  • GET  /api/forecast │    │                              │       │
-│  │  • GET  /api/items    │    │                              │       │
-│  └──────────┬───────────┘    └──────────────┬───────────────┘       │
-│             │                               │                       │
-│             └───────────────┬───────────────┘                       │
-│                             ▼                                       │
-│              ┌──────────────────────────┐                           │
-│              │  Celery Queue (Redis)     │                           │
-│              │  1 request diproses       │                           │
-│              │  satu per satu            │                           │
-│              └──────────┬───────────────┘                           │
-│                         ▼                                           │
-│              ┌──────────────────────────┐                           │
-│              │   CrewAI Crew Engine      │                           │
-│              │   (app/agent/crew.py)     │                           │
-│              │                          │                           │
-│              │   Manager Agent (auto)   │                           │
-│              │   delegates ke:          │                           │
-│              │   • Stock Specialist     │                           │
-│              │   • Transaction Spec.    │                           │
-│              │   • Analytics Specialist │                           │
-│              └──────────┬───────────────┘                           │
-│                         │  (lewat app/agent/tools.py)                │
-│          ┌──────────────┼──────────────────────┐                    │
-│          ▼              ▼                      ▼                    │
-│  ┌──────────────┐ ┌───────────────┐  ┌────────────────┐            │
-│  │ stock_        │ │ transaction_  │  │   analytics_   │            │
-│  │ usecase.py    │ │ usecase.py    │  │   usecase.py   │            │
-│  │              │ │               │  │                │            │
-│  │ • check_stock│ │ • view_outgo- │  │ • analyze_     │            │
-│  │ • get_low_   │ │   ing_stock   │  │   sparepart_   │            │
-│  │   stock      │ │ • get_top_    │  │   trend        │            │
-│  │              │ │   users       │  │ • predict_     │            │
-│  │              │ │               │  │   monthly_needs│            │
-│  │              │ │               │  │ • get_forecast │            │
-│  │              │ │               │  │   _data / insights │        │
-│  └──────┬───────┘ └──────┬────────┘  └───────┬────────┘            │
-│         │                │                   │                      │
-│         └────────────────┴───────────────────┘                      │
-│                          ▼ (app/repository/*.py — satu-satunya       │
-│                            layer yang menyentuh SQL)                 │
+│      ┌─────────────────────────┐  ┌─────────────────────────┐       │
+│      │ FastAPI Server          │  │ Telegram Bot (python-   │       │
+│      │ (app/delivery/http)     │  │ telegram-bot)           │       │
+│      │                         │  │ (app/delivery/telegram) │       │
+│      │ • GET  /                │  │                         │       │
+│      │ • POST /api/chat        │  │ • /start command        │       │
+│      │ • GET  /api/dashboard   │  │ • Text message handler  │       │
+│      │ • GET  /api/stock       │  │                         │       │
+│      │ • GET  /api/forecast    │  │                         │       │
+│      │ • GET  /api/items       │  │                         │       │
+│      └────────────┬────────────┘  └────────────┬────────────┘       │
+│                   │                            │                    │
+│                   └──────────────┬─────────────┘                    │
+│                                  ▼                                  │
+│                    ┌───────────────────────────┐                    │
+│                    │ Celery Queue (Redis)      │                    │
+│                    │ 1 request diproses        │                    │
+│                    │ satu per satu             │                    │
+│                    └──────────────┬────────────┘                    │
+│                                   ▼                                 │
+│                    ┌───────────────────────────┐                    │
+│                    │ CrewAI Crew Engine        │                    │
+│                    │ (app/agent/crew.py)       │                    │
+│                    │                           │                    │
+│                    │ Manager Agent (auto)      │                    │
+│                    │ delegates ke:             │                    │
+│                    │ • Stock Specialist        │                    │
+│                    │ • Transaction Spec.       │                    │
+│                    │ • Analytics Specialist    │                    │
+│                    └──────────────┬────────────┘                    │
+│                                   │ (app/agent/tools.py)            │
+│           ┌───────────────────────┼───────────────────────┐         │
+│           ▼                       ▼                       ▼         │
+│  ┌─────────────────┐   ┌─────────────────┐   ┌─────────────────┐    │
+│  │ stock_          │   │ transaction_    │   │ analytics_      │    │
+│  │ usecase.py      │   │ usecase.py      │   │ usecase.py      │    │
+│  │                 │   │                 │   │                 │    │
+│  │ • check_stock   │   │ • view_outgo-   │   │ • analyze_trend │    │
+│  │ • get_low_stock │   │   ing_stock     │   │ • predict_needs │    │
+│  │                 │   │ • get_top_users │   │ • get_forecast  │    │
+│  └────────┬────────┘   └────────┬────────┘   └────────┬────────┘    │
+│           │                     │                     │             │
+│           └─────────────────────┴─────────────────────┘             │
+│                                 ▼ (app/repository/*.py)             │
 └─────────────────────────────────────────────────────────────────────┘
-          │                │                   │
-          ▼                ▼                   ▼
+                                  │
+                                  ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                         DATA LAYER                                  │
+│                           DATA LAYER                                │
 │                                                                     │
-│  ┌──────────────────────────────────────────────────────────┐       │
-│  │              SQLite Database (sparepart.db)               │       │
-│  │                                                          │       │
-│  │  ┌─────────────────┐    ┌──────────────────────┐        │       │
-│  │  │   spareparts     │    │    transactions       │        │       │
-│  │  │                 │    │                      │        │       │
-│  │  │  • item_number  │◄───│  • item_number (FK)  │        │       │
-│  │  │  • product_name │    │  • product_name      │        │       │
-│  │  │  • soh          │    │  • qty_out           │        │       │
-│  │  │  • safety_stock │    │  • department         │        │       │
-│  │  │  • status       │    │  • pic                │        │       │
-│  │  │  • unit         │    │  • tanggal            │        │       │
-│  │  │  • kategori     │    │  • status             │        │       │
-│  │  │  • moq          │    │  • keterangan         │        │       │
-│  │  │  • last_price   │    │  • nomor_pesanan      │        │       │
-│  │  └─────────────────┘    └──────────────────────┘        │       │
-│  └──────────────────────────────────────────────────────────┘       │
+│      ┌───────────────────────────────────────────────────────┐      │
+│      │             SQLite Database (sparepart.db)            │      │
+│      │                                                       │      │
+│      │   ┌─────────────────┐         ┌──────────────────┐    │      │
+│      │   │ spareparts      │         │ transactions     │    │      │
+│      │   │                 │         │                  │    │      │
+│      │   │ • item_number   │◄────────│ • item_number(FK)│    │      │
+│      │   │ • product_name  │         │ • product_name   │    │      │
+│      │   │ • soh           │         │ • qty_out        │    │      │
+│      │   │ • safety_stock  │         │ • department     │    │      │
+│      │   │ • status        │         │ • pic            │    │      │
+│      │   │ • unit          │         │ • tanggal        │    │      │
+│      │   │ • kategori      │         │ • status         │    │      │
+│      │   │ • moq           │         │ • keterangan     │    │      │
+│      │   │ • last_price    │         │ • nomor_pesanan  │    │      │
+│      │   └─────────────────┘         └──────────────────┘    │      │
+│      └───────────────────────────────────────────────────────┘      │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
-          │
-          ▼
+                                  │
+                                  ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                      EXTERNAL AI SERVICE                            │
+│                         EXTERNAL AI SERVICE                         │
 │                                                                     │
-│  ┌────────────────────┐   ┌────────────────────────┐               │
-│  │  Google Gemini API  │   │  Ollama (Local LLM)    │               │
-│  │  (gemini-2.5-flash) │   │  (llama3.1)            │               │
-│  │                    │   │                        │               │
-│  │  Cloud-based       │   │  Self-hosted            │               │
-│  │  via litellm       │   │  localhost:11434        │               │
-│  └────────────────────┘   └────────────────────────┘               │
+│    ┌────────────────────────┐        ┌────────────────────────┐     │
+│    │ Google Gemini API      │        │ Ollama (Local LLM)     │     │
+│    │ (gemini-2.5-flash)     │        │ (llama3.1)             │     │
+│    │                        │        │                        │     │
+│    │ Cloud-based            │        │ Self-hosted            │     │
+│    │ via litellm            │        │ localhost:11434        │     │
+│    └────────────────────────┘        └────────────────────────┘     │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
 ```
@@ -161,38 +156,38 @@ Berbeda dengan chatbot biasa yang hanya menjawab berdasarkan teks, **Agentic AI*
 Project ini menggunakan **CrewAI** sebagai framework orkestrasi AI. CrewAI terdiri dari 3 komponen utama:
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                        CREW                             │
-│                                                         │
-│  ┌───────────────────────────────────────────────────┐  │
-│  │                     AGENT                         │  │
-│  │                                                   │  │
-│  │  Role : "Sparepart Inventory Specialist"          │  │
-│  │  Goal : Provide accurate stock data, analyze      │  │
-│  │         trends, and predict needs                 │  │
-│  │  LLM  : Gemini 2.5 Flash / Ollama Llama 3.1      │  │
-│  │                                                   │  │
-│  │  ┌─────────────────────────────────────────────┐  │  │
-│  │  │                  TOOLS                      │  │  │
-│  │  │                                             │  │  │
-│  │  │  🔧 Check Stock                             │  │  │
-│  │  │  🔧 Get Low Stock Items                     │  │  │
-│  │  │  🔧 View Outgoing Stock                     │  │  │
-│  │  │  🔧 Get Top Users of Item                   │  │  │
-│  │  │  🔧 Analyze Sparepart Trend                 │  │  │
-│  │  │  🔧 Predict Monthly Needs                   │  │  │
-│  │  └─────────────────────────────────────────────┘  │  │
-│  └───────────────────────────────────────────────────┘  │
-│                                                         │
-│  ┌───────────────────────────────────────────────────┐  │
-│  │                     TASK                          │  │
-│  │                                                   │  │
-│  │  Description : "Answer the user's query: '...'"   │  │
-│  │  Expected    : "A helpful answer with actual data" │  │
-│  └───────────────────────────────────────────────────┘  │
-│                                                         │
-│  Process: Sequential                                    │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                               CREW                                  │
+│                                                                     │
+│    ┌───────────────────────────────────────────────────────────┐    │
+│    │                           AGENT                           │    │
+│    │                                                           │    │
+│    │  Role : "Sparepart Inventory Specialist"                  │    │
+│    │  Goal : Provide accurate stock data, analyze trends,      │    │
+│    │         and predict needs                                 │    │
+│    │  LLM  : Gemini 2.5 Flash / Ollama Llama 3.1               │    │
+│    │                                                           │    │
+│    │      ┌─────────────────────────────────────────────┐      │    │
+│    │      │                    TOOLS                    │      │    │
+│    │      │                                             │      │    │
+│    │      │  > Check Stock                              │      │    │
+│    │      │  > Get Low Stock Items                      │      │    │
+│    │      │  > View Outgoing Stock                      │      │    │
+│    │      │  > Get Top Users of Item                    │      │    │
+│    │      │  > Analyze Sparepart Trend                  │      │    │
+│    │      │  > Predict Monthly Needs                    │      │    │
+│    │      └─────────────────────────────────────────────┘      │    │
+│    └───────────────────────────────────────────────────────────┘    │
+│                                                                     │
+│    ┌───────────────────────────────────────────────────────────┐    │
+│    │                           TASK                            │    │
+│    │                                                           │    │
+│    │  Description : "Answer the user's query: '...'"           │    │
+│    │  Expected    : "A helpful answer with actual data"        │    │
+│    └───────────────────────────────────────────────────────────┘    │
+│                                                                     │
+│    Process: Sequential                                              │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
 #### Komponen CrewAI:
@@ -228,62 +223,60 @@ User mengetik pertanyaan
          │
          ▼
 ┌──────────────────────┐
-│  Frontend (browser)  │──── POST /api/chat ────┐
-│  atau Telegram Bot   │                        │
-└──────────────────────┘                        │
-                                                ▼
-                                   ┌────────────────────┐
-                                   │   FastAPI / Telegram │
-                                   │   menerima pesan    │
-                                   └─────────┬──────────┘
+│  Frontend (browser)  │─── POST /api/chat ──┐
+│  atau Telegram Bot   │                     │
+└──────────────────────┘                     │
+                                             ▼
+                                  ┌──────────────────────┐
+                                  │ FastAPI / Telegram   │
+                                  │ menerima pesan       │
+                                  └──────────┬───────────┘
                                              │
                                              ▼
-                                   ┌────────────────────┐
-                                   │   CrewAI membuat    │
-                                   │   Task baru dari    │
-                                   │   pertanyaan user   │
-                                   └─────────┬──────────┘
+                                  ┌──────────────────────┐
+                                  │ CrewAI membuat Task  │
+                                  │ baru dari pertanyaan │
+                                  └──────────┬───────────┘
                                              │
                                              ▼
-                                   ┌────────────────────┐
-                                   │   Agent "berpikir"  │
-                                   │   menggunakan LLM   │
-                                   │   (Gemini / Ollama) │
-                                   └─────────┬──────────┘
+                                  ┌──────────────────────┐
+                                  │ Agent "berpikir"     │
+                                  │ menggunakan LLM      │
+                                  │ (Gemini / Ollama)    │
+                                  └──────────┬───────────┘
                                              │
-                              ┌──────────────┼──────────────┐
+                              ┌──────────────┴──────────────┐
                               ▼              ▼              ▼
-                    ┌──────────────┐ ┌──────────────┐ ┌────────────┐
-                    │ Tool:        │ │ Tool:        │ │ Tool:      │
-                    │ Check Stock  │ │ Analyze Trend│ │ Predict    │
-                    └──────┬───────┘ └──────┬───────┘ └─────┬──────┘
-                           │                │               │
-                           └────────────────┼───────────────┘
-                                            ▼
-                                   ┌────────────────────┐
-                                   │   Query ke SQLite   │
-                                   │   Database          │
-                                   └─────────┬──────────┘
+                      ┌───────────────┐┌───────────────┐┌───────────────┐
+                      │ Tool:         ││ Tool:         ││ Tool:         │
+                      │ Check Stock   ││ Analyze Trend ││ Predict Needs │
+                      └───────┬───────┘└───────┬───────┘└───────┬───────┘
+                              │              │              │
+                              └──────────────┼──────────────┘
+                                             ▼
+                                  ┌──────────────────────┐
+                                  │ Query ke SQLite      │
+                                  │ Database             │
+                                  └──────────┬───────────┘
                                              │
                                              ▼
-                                   ┌────────────────────┐
-                                   │   Data dikirim      │
-                                   │   kembali ke Agent  │
-                                   └─────────┬──────────┘
+                                  ┌──────────────────────┐
+                                  │ Data dikirim kembali │
+                                  │ ke Agent             │
+                                  └──────────┬───────────┘
                                              │
                                              ▼
-                                   ┌────────────────────┐
-                                   │   Agent menyusun    │
-                                   │   jawaban final     │
-                                   │   dalam bahasa      │
-                                   │   natural           │
-                                   └─────────┬──────────┘
+                                  ┌──────────────────────┐
+                                  │ Agent menyusun       │
+                                  │ jawaban final dalam  │
+                                  │ bahasa natural       │
+                                  └──────────┬───────────┘
                                              │
                                              ▼
-                                   ┌────────────────────┐
-                                   │  Response dikirim   │
-                                   │  ke User            │
-                                   └────────────────────┘
+                                  ┌──────────────────────┐
+                                  │ Response dikirim     │
+                                  │ ke User              │
+                                  └──────────────────────┘
 ```
 
 **Contoh Alur Nyata:**
@@ -304,56 +297,56 @@ User memilih item dari dropdown
          │
          ▼
 ┌──────────────────────┐
-│  Frontend (browser)  │──── GET /api/forecast/{item} ────┐
-└──────────────────────┘                                   │
-                                                           ▼
-                                              ┌────────────────────┐
-                                              │  analytics_usecase  │
-                                              │  get_forecast_data()│
-                                              └─────────┬──────────┘
-                                                        │
-                                                        ▼
-                                              ┌────────────────────┐
-                                              │  Ambil semua data   │
-                                              │  transaksi item     │
-                                              │  dari database      │
-                                              └─────────┬──────────┘
-                                                        │
-                                                        ▼
-                                              ┌────────────────────┐
-                                              │  Pandas: Group by   │
-                                              │  tanggal, sum       │
-                                              │  qty_out per hari   │
-                                              └─────────┬──────────┘
-                                                        │
-                                                        ▼
-                                              ┌────────────────────┐
-                                              │  Prophet:           │
-                                              │  1. Fit model       │
-                                              │  2. Make future     │
-                                              │     dataframe       │
-                                              │     (30 hari)       │
-                                              │  3. Predict         │
-                                              └─────────┬──────────┘
-                                                        │
-                                                        ▼
-                                              ┌────────────────────┐
-                                              │  Return JSON:       │
-                                              │  • dates[]          │
-                                              │  • actual[]         │
-                                              │  • predicted[]      │
-                                              └─────────┬──────────┘
-                                                        │
-                                                        ▼
-                                              ┌────────────────────┐
-                                              │  Chart.js render    │
-                                              │  grafik di browser  │
-                                              │  • Garis hijau:     │
-                                              │    data aktual      │
-                                              │  • Garis biru       │
-                                              │    putus-putus:     │
-                                              │    prediksi AI      │
-                                              └────────────────────┘
+│  Frontend (browser)  │── GET /api/forecast/{item} ──┐
+└──────────────────────┘                              │
+                                                      ▼
+                                          ┌───────────────────────┐
+                                          │ analytics_usecase     │
+                                          │ get_forecast_data()   │
+                                          └───────────┬───────────┘
+                                                      │
+                                                      ▼
+                                          ┌───────────────────────┐
+                                          │ Ambil semua data      │
+                                          │ transaksi item        │
+                                          │ dari database         │
+                                          └───────────┬───────────┘
+                                                      │
+                                                      ▼
+                                          ┌───────────────────────┐
+                                          │ Pandas: Group by      │
+                                          │ tanggal, sum          │
+                                          │ qty_out per hari      │
+                                          └───────────┬───────────┘
+                                                      │
+                                                      ▼
+                                          ┌───────────────────────┐
+                                          │ Prophet:              │
+                                          │ 1. Fit model          │
+                                          │ 2. Make future        │
+                                          │    dataframe          │
+                                          │    (30 hari)          │
+                                          │ 3. Predict            │
+                                          └───────────┬───────────┘
+                                                      │
+                                                      ▼
+                                          ┌───────────────────────┐
+                                          │ Return JSON:          │
+                                          │ • dates[]             │
+                                          │ • actual[]            │
+                                          │ • predicted[]         │
+                                          └───────────┬───────────┘
+                                                      │
+                                                      ▼
+                                          ┌───────────────────────┐
+                                          │ Chart.js render       │
+                                          │ grafik di browser     │
+                                          │ • Garis hijau:        │
+                                          │   data aktual         │
+                                          │ • Garis biru          │
+                                          │   putus-putus:        │
+                                          │   prediksi AI         │
+                                          └───────────────────────┘
 ```
 
 ---
@@ -400,17 +393,17 @@ else:
 ### Perbandingan Provider
 
 ```
-┌─────────────────┬───────────────────────┬──────────────────────────┐
-│                 │   Gemini (Cloud)      │   Ollama (Lokal)         │
-├─────────────────┼───────────────────────┼──────────────────────────┤
-│ Model           │ gemini-2.5-flash      │ llama3.1                 │
-│ Kecepatan       │ ⚡ Sangat cepat       │ 🐢 Tergantung hardware   │
-│ Biaya           │ Gratis (quota)        │ Gratis 100%              │
-│ Koneksi         │ Butuh internet        │ Offline                  │
-│ RAM/GPU         │ Tidak membebani       │ Butuh ≥8GB RAM           │
-│ Privasi         │ Data via cloud        │ Data tetap lokal         │
-│ Routing         │ litellm → Google API  │ litellm → localhost      │
-└─────────────────┴───────────────────────┴──────────────────────────┘
+┌──────────────────┬───────────────────────┬──────────────────────────┐
+│                  │   Gemini (Cloud)      │   Ollama (Lokal)         │
+├──────────────────┼───────────────────────┼──────────────────────────┤
+│ Model            │ gemini-2.5-flash      │ llama3.1                 │
+│ Kecepatan        │ Sangat cepat          │ Tergantung hardware      │
+│ Biaya            │ Gratis (quota)        │ Gratis 100%              │
+│ Koneksi          │ Butuh internet        │ Offline                  │
+│ RAM/GPU          │ Tidak membebani       │ Butuh ≥8GB RAM           │
+│ Privasi          │ Data via cloud        │ Data tetap lokal         │
+│ Routing          │ litellm → Google API  │ litellm → localhost      │
+└──────────────────┴───────────────────────┴──────────────────────────┘
 ```
 
 ---
