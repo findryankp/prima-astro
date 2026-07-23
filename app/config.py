@@ -13,9 +13,10 @@ CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:63
 
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 
-
 def build_llm() -> LLM:
     """Build the CrewAI LLM client for whichever provider is configured in .env."""
+
     if LLM_PROVIDER == "gemini":
         return LLM(model="gemini/gemini-2.5-flash", temperature=0.5)
+        
     return LLM(model="ollama/llama3.1", base_url="http://localhost:11434")

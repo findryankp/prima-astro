@@ -1,7 +1,6 @@
 from app.delivery.worker.celery_app import celery_app
 from app.agent.crew import process_user_query_sync
 
-
 @celery_app.task
 def process_query_task(user_query: str) -> str:
     """

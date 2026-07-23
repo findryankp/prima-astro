@@ -73,15 +73,31 @@ def process_user_query_sync(user_query: str) -> str:
     Synchronous entrypoint for the CrewAI crew. Intended to be called from
     within a Celery worker task (worker processes run outside an event loop).
     """
-    crew = _build_crew(user_query)
-    result = crew.kickoff()
-    return str(result)
+    try:
+        crew = _build_crew(user_query)
+        result = crew.kickoff()
+        return str(result)
+    except Exception as e:
+        return _handle_crew_error(e)
 
 
 async def process_user_query(user_query: str) -> str:
     """
     Async entrypoint kept for direct/non-queued use of the CrewAI crew.
     """
-    crew = _build_crew(user_query)
-    result = await crew.kickoff_async()
-    return str(result)
+    try:
+        crew = _build_crew(user_query)
+        result = await crew.kickoff_async()
+        return str(result)
+    except Exception as e:
+        return _handle_crew_error(e)
+
+def _handle_crew_error(e: Exception) -> str:
+    error_msg = str(e)
+    if "API_KEY_INVALID" in error_msg or "API key not valid" in error_msg or "400 INVALID_ARGUMENT" in error_msg:
+        return "🤖 **Maaf, konfigurasi AI bermasalah.**\nAPI Key (Google Gemini) yang digunakan tidak valid atau belum diatur. Silakan periksa pengaturan Gemini API Key."
+    elif "Connection error" in error_msg or "localhost:11434" in error_msg:
+        return "🤖 **Maaf, AI lokal tidak merespons.**\nTidak dapat terhubung ke Ollama. Pastikan aplikasi Ollama sudah berjalan."
+    
+    # Generic fallback human-readable error
+    return f"🤖 **Maaf, terjadi kendala teknis pada sistem AI.**\nSilakan coba beberapa saat lagi. *(Detail: {error_msg[:100]}...)*"
