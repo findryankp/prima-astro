@@ -1,44 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prima Astro | Dashboard</title>
-    <link rel="stylesheet" href="/static/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Add jQuery and Select2 for searchable dropdown -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="/static/components/sidebar.js"></script>
 </head>
+
 <body>
     <div class="app-container">
-        <!-- Sidebar -->
-        <aside class="sidebar glass-panel">
-            <div class="logo">
-                <h2>✨ Prima<span>Astro</span></h2>
-            </div>
-                        <nav>
-                <ul>
-                    <li class="active" id="nav-dashboard" onclick="window.location.href='/'" style="cursor: pointer;">Dashboard</li>
-                    <li class="" id="nav-insight" onclick="window.location.href='/insight'" style="cursor: pointer;">Insight</li>
-                    <li class="" id="nav-forecast" onclick="window.location.href='/forecast'" style="cursor: pointer;">Forecasting</li>
-                    <li class="" id="nav-chat" onclick="window.location.href='/chat'" style="cursor: pointer;">AI Assistant</li>
-                </ul>
-            </nav>
-            <div class="user-profile">
-                <div class="avatar">👨‍💻</div>
-                <div class="info">
-                    <p class="name">Admin</p>
-                    <p class="role">Sparepart Manager</p>
-                </div>
-            </div>
-        </aside>
+        <div id="sidebar-placeholder"></div>
 
         <!-- Main Content -->
         <main class="main-content">
-            
+
             <!-- Dashboard View -->
             <section id="view-dashboard" class="view-section active">
                 <header class="top-header">
@@ -81,7 +63,7 @@
                             </tbody>
                         </table>
                     </div>
-                    
+
                     <div class="table-container glass-panel">
                         <h3>🔄 Recent Outgoing</h3>
                         <table>
@@ -101,10 +83,9 @@
                     </div>
                 </div>
             </section>
-
         </main>
     </div>
-    
     <script src="/static/dashboard/dashboard.js"></script>
 </body>
+
 </html>
