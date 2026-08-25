@@ -48,6 +48,8 @@ body {
 /* Sidebar */
 .sidebar {
     width: 260px;
+    min-width: 260px;
+    flex-shrink: 0;
     display: flex;
     flex-direction: column;
     padding: 24px;
@@ -423,11 +425,22 @@ td.trend-down { color: var(--danger); font-weight: 600; }
     height: 48px;
     display: flex;
     align-items: center;
+    transition: all 0.3s ease;
+}
+
+.select2-container--default.select2-container--open .select2-selection--single {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
 .select2-container--default .select2-selection--single .select2-selection__rendered {
     color: var(--text-main);
     padding-left: 20px;
+    font-size: 1rem;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__placeholder {
+    color: var(--text-muted);
 }
 
 .select2-container--default .select2-selection--single .select2-selection__arrow {
@@ -435,30 +448,47 @@ td.trend-down { color: var(--danger); font-weight: 600; }
     right: 15px;
 }
 
+.select2-container--default .select2-selection--single .select2-selection__arrow b {
+    border-color: var(--text-muted) transparent transparent transparent;
+}
+
 .select2-dropdown {
-    background: #1e293b;
+    background: rgba(30, 41, 59, 0.95);
+    backdrop-filter: blur(12px);
     border: 1px solid var(--glass-border);
     color: var(--text-main);
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    margin-top: 8px;
+}
+
+.select2-search--dropdown {
+    padding: 12px;
 }
 
 .select2-search--dropdown .select2-search__field {
     background: rgba(0, 0, 0, 0.2);
     border: 1px solid var(--glass-border);
     color: var(--text-main);
-    border-radius: 6px;
-    padding: 8px;
+    border-radius: 8px;
+    padding: 10px;
     outline: none;
+    font-size: 0.95rem;
 }
 
 .select2-search--dropdown .select2-search__field:focus {
     border-color: var(--primary);
 }
 
+.select2-results__option {
+    padding: 10px 16px;
+    font-size: 0.95rem;
+}
+
 .select2-container--default .select2-results__option--selected {
-    background-color: rgba(59, 130, 246, 0.3);
+    background-color: rgba(59, 130, 246, 0.2);
+    color: var(--text-main);
 }
 
 .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
