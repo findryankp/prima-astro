@@ -1,20 +1,14 @@
 import os
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-<<<<<<< HEAD
 from app.config import REPORTS_DIR
 from app.delivery.worker.celery_app import celery_app
 from app.delivery.worker.tasks import process_query_task, generate_report_task
 from app.usecase import dashboard_usecase, analytics_usecase, purchasing_usecase, pricing_usecase
-=======
-
-from app.delivery.worker.tasks import process_query_task
-from app.usecase import dashboard_usecase, analytics_usecase
 from app.delivery.http.web import web_router
->>>>>>> 870eeb327ec4cd41bc44c3c170faba12e1cf1372
 
 app = FastAPI(title="Agentic AI Sparepart Dashboard API")
 

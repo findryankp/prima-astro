@@ -13,7 +13,6 @@ CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:63
 
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 
-<<<<<<< HEAD
 # Chat id tujuan buat notifikasi otomatis (restock alert dari Celery beat).
 # Beda sama TELEGRAM_TOKEN punya bot-nya, ini id chat/group yang mau dikirimin.
 TELEGRAM_ALERT_CHAT_ID = os.getenv("TELEGRAM_ALERT_CHAT_ID")
@@ -21,8 +20,6 @@ TELEGRAM_ALERT_CHAT_ID = os.getenv("TELEGRAM_ALERT_CHAT_ID")
 REPORTS_DIR = os.getenv("REPORTS_DIR", "reports")
 
 
-=======
->>>>>>> 870eeb327ec4cd41bc44c3c170faba12e1cf1372
 def build_llm() -> LLM:
     """Build the CrewAI LLM client for whichever provider is configured in .env."""
 

@@ -22,70 +22,21 @@ Dokumen ini menjelaskan secara lengkap bagaimana project **Prima Astro** bekerja
 ┌─────────────────────────────────────────────────────────────────────┐
 │                        APPLICATION LAYER                            │
 │                                                                     │
-<<<<<<< HEAD
-│  ┌──────────────────────┐    ┌──────────────────────────────┐       │
-│  │  FastAPI Server       │    │  Telegram Bot (python-       │       │
-│  │  (app/delivery/http)  │    │  telegram-bot)               │       │
-│  │                       │    │  (app/delivery/telegram)     │       │
-│  │                       │    │                              │       │
-│  │  • GET  /             │    │  • /start command            │       │
-│  │  • POST /api/chat     │    │  • Text message handler      │       │
-│  │  • GET  /api/dashboard│    │                              │       │
-│  │  • GET  /api/stock    │    │                              │       │
-│  │  • GET  /api/forecast │    │                              │       │
-│  │  • GET  /api/items    │    │                              │       │
-│  └──────────┬───────────┘    └──────────────┬───────────────┘       │
-│             │                               │                       │
-│             └───────────────┬───────────────┘                       │
-│                             ▼                                       │
-│              ┌──────────────────────────┐                           │
-│              │  Celery Queue (Redis)     │                           │
-│              │  1 request diproses       │                           │
-│              │  satu per satu            │                           │
-│              └──────────┬───────────────┘                           │
-│                         ▼                                           │
-│              ┌──────────────────────────┐                           │
-│              │   CrewAI Crew Engine      │                           │
-│              │   (app/agent/crew.py)     │                           │
-│              │                          │                           │
-│              │   Manager Agent (auto)   │                           │
-│              │   delegates ke:          │                           │
-│              │   • Stock Specialist     │                           │
-│              │   • Transaction Spec.    │                           │
-│              │   • Analytics Specialist │                           │
-│              │   • Purchasing Spec.     │                           │
-│              │   • Cost Insight Spec.   │                           │
-│              └──────────┬───────────────┘                           │
-│                         │  (lewat app/agent/tools.py)                │
-│          ┌──────────────┼──────────────────────┐                    │
-│          ▼              ▼                      ▼                    │
-│  ┌──────────────┐ ┌───────────────┐  ┌────────────────┐            │
-│  │ stock_        │ │ transaction_  │  │   analytics_   │            │
-│  │ usecase.py    │ │ usecase.py    │  │   usecase.py   │            │
-│  │              │ │               │  │                │            │
-│  │ • check_stock│ │ • view_outgo- │  │ • analyze_     │            │
-│  │ • get_low_   │ │   ing_stock   │  │   sparepart_   │            │
-│  │   stock      │ │ • get_top_    │  │   trend        │            │
-│  │              │ │   users       │  │ • predict_     │            │
-│  │              │ │               │  │   monthly_needs│            │
-│  │              │ │               │  │ • get_forecast │            │
-│  │              │ │               │  │   _data / insights │        │
-│  └──────┬───────┘ └──────┬────────┘  └───────┬────────┘            │
-│         │                │                   │                      │
-│         └────────────────┴───────────────────┘                      │
-│                          ▼ (app/repository/*.py — satu-satunya       │
-│                            layer yang menyentuh SQL)                 │
-=======
 │      ┌─────────────────────────┐  ┌─────────────────────────┐       │
 │      │ FastAPI Server          │  │ Telegram Bot (python-   │       │
 │      │ (app/delivery/http)     │  │ telegram-bot)           │       │
 │      │                         │  │ (app/delivery/telegram) │       │
-│      │ • GET  /                │  │                         │       │
-│      │ • POST /api/chat        │  │ • /start command        │       │
-│      │ • GET  /api/dashboard   │  │ • Text message handler  │       │
+│      │ • GET  /, /insight,     │  │                         │       │
+│      │   /forecast, /chat      │  │ • /start command        │       │
+│      │ • POST /api/chat        │  │ • Text message handler  │       │
+│      │ • GET  /api/dashboard   │  │                         │       │
 │      │ • GET  /api/stock       │  │                         │       │
 │      │ • GET  /api/forecast    │  │                         │       │
 │      │ • GET  /api/items       │  │                         │       │
+│      │ • GET  /api/insights    │  │                         │       │
+│      │ • /api/purchase-orders  │  │                         │       │
+│      │ • /api/pricing/insights │  │                         │       │
+│      │ • /api/reports/*        │  │                         │       │
 │      └────────────┬────────────┘  └────────────┬────────────┘       │
 │                   │                            │                    │
 │                   └──────────────┬─────────────┘                    │
@@ -94,6 +45,7 @@ Dokumen ini menjelaskan secara lengkap bagaimana project **Prima Astro** bekerja
 │                    │ Celery Queue (Redis)      │                    │
 │                    │ 1 request diproses        │                    │
 │                    │ satu per satu             │                    │
+│                    │ + Celery Beat (jadwal)    │                    │
 │                    └──────────────┬────────────┘                    │
 │                                   ▼                                 │
 │                    ┌───────────────────────────┐                    │
@@ -105,22 +57,19 @@ Dokumen ini menjelaskan secara lengkap bagaimana project **Prima Astro** bekerja
 │                    │ • Stock Specialist        │                    │
 │                    │ • Transaction Spec.       │                    │
 │                    │ • Analytics Specialist    │                    │
+│                    │ • Purchasing Spec.        │                    │
+│                    │ • Cost Insight Spec.      │                    │
 │                    └──────────────┬────────────┘                    │
 │                                   │ (app/agent/tools.py)            │
-│           ┌───────────────────────┼───────────────────────┐         │
-│           ▼                       ▼                       ▼         │
-│  ┌─────────────────┐   ┌─────────────────┐   ┌─────────────────┐    │
-│  │ stock_          │   │ transaction_    │   │ analytics_      │    │
-│  │ usecase.py      │   │ usecase.py      │   │ usecase.py      │    │
-│  │                 │   │                 │   │                 │    │
-│  │ • check_stock   │   │ • view_outgo-   │   │ • analyze_trend │    │
-│  │ • get_low_stock │   │   ing_stock     │   │ • predict_needs │    │
-│  │                 │   │ • get_top_users │   │ • get_forecast  │    │
-│  └────────┬────────┘   └────────┬────────┘   └────────┬────────┘    │
-│           │                     │                     │             │
-│           └─────────────────────┴─────────────────────┘             │
-│                                 ▼ (app/repository/*.py)             │
->>>>>>> 870eeb327ec4cd41bc44c3c170faba12e1cf1372
+│                                   ▼                                 │
+│                    ┌───────────────────────────────────────┐        │
+│                    │ usecase/ (business logic — gak tahu   │        │
+│                    │ soal HTTP/Celery/Telegram/CrewAI)     │        │
+│                    │ stock · transaction · analytics ·     │        │
+│                    │ purchasing · pricing · notification · │        │
+│                    │ report · dashboard                    │        │
+│                    └──────────────────┬────────────────────┘        │
+│                                       ▼ (app/repository/*.py)       │
 └─────────────────────────────────────────────────────────────────────┘
                                   │
                                   ▼
@@ -186,7 +135,7 @@ Dokumen ini menjelaskan secara lengkap bagaimana project **Prima Astro** bekerja
 
 | Teknologi | Fungsi |
 |-----------|--------|
-| **HTML5** | Struktur halaman dashboard |
+| **HTML5** | Struktur tiap halaman (dashboard, insight, forecast, chat) |
 | **CSS3 (Custom)** | Styling dengan tema dark mode & glassmorphism |
 | **JavaScript (Vanilla)** | Logika frontend, fetch API, dan interaktivitas |
 | **Chart.js** | Library charting untuk visualisasi grafik forecasting |
@@ -251,7 +200,7 @@ Project ini menggunakan **CrewAI** sebagai framework orkestrasi AI. CrewAI terdi
 
 2. **Task** — Tugas spesifik yang diberikan kepada agent. Dalam project ini, setiap pertanyaan user menjadi 1 task baru.
 
-3. **Crew** — Orkestrator yang menjalankan agent dan task. Menggunakan `Process.sequential` (task dijalankan satu per satu secara berurutan).
+3. **Crew** — Orkestrator yang menjalankan agent dan task. Menggunakan `Process.hierarchical` — ada Manager Agent yang mendelegasikan ke agent spesialis yang paling cocok, bukan menjalankan semua agent berurutan.
 
 ### Daftar Tools (Kemampuan AI)
 
@@ -472,7 +421,7 @@ FastAPI menyediakan beberapa endpoint:
 
 | Method | Endpoint | Fungsi | Response |
 |--------|----------|--------|----------|
-| `GET` | `/` | Serve halaman dashboard (HTML) | HTML |
+| `GET` | `/`, `/insight`, `/forecast`, `/chat` | Serve halaman-halaman dashboard (HTML, multi-page) | HTML |
 | `POST` | `/api/chat` | Kirim pertanyaan ke AI Agent | `{ status, response }` |
 | `GET` | `/api/dashboard/stats` | Statistik ringkas (total item, low stock, total tx) | `{ total_items, low_stock_items, total_transactions }` |
 | `GET` | `/api/stock/low` | Daftar barang stok menipis | `[{ item_number, product_name, soh, ... }]` |
@@ -488,6 +437,8 @@ FastAPI menyediakan beberapa endpoint:
 
 Endpoint `/api/reports/*` sengaja dibikin async lewat Celery, bukan langsung diproses di request — supaya generate laporan (yang bisa nyentuh Prophet berkali-kali) gak nge-block thread FastAPI. Alur pemakaiannya: `POST /generate` → dapat `task_id` → poll `GET /status/{task_id}` sampai `status: "done"` → `GET /download/{filename}`.
 
+Rute halaman HTML (`/`, `/insight`, `/forecast`, `/chat`) sekarang didaftarkan lewat `app/delivery/http/web.py` (`web_router`), terpisah dari rute JSON API di `app/delivery/http/api.py` — dashboard-nya sendiri sudah jadi multi-page (tiap menu = halaman terpisah di `static/`), bukan satu SPA lagi.
+
 ### Notifikasi Restock Otomatis (Celery Beat)
 
 Selain worker biasa, ada satu proses tambahan yang opsional: `celery -A celery_app beat`. Proses ini yang baca jadwal di `app/delivery/worker/celery_app.py` (`beat_schedule`) dan tiap jam 7 pagi ngirim task `send_restock_alert_task` ke antrian yang sama. Task itu manggil `notification_usecase.send_restock_alert()`, yang ngecek insight terbaru dan kalau ada item kritis, kirim ringkasannya ke Telegram lewat `TELEGRAM_ALERT_CHAT_ID`. Kalau env var itu kosong, task-nya tetap jalan tapi cuma di-skip (gak error).
@@ -496,18 +447,9 @@ Selain worker biasa, ada satu proses tambahan yang opsional: `celery -A celery_a
 
 ## 🎨 Mekanisme Frontend
 
-### Navigasi Single Page Application (SPA)
+### Navigasi Multi-Page
 
-Dashboard menggunakan konsep **SPA sederhana** tanpa framework (Vanilla JS). Navigasi dilakukan dengan menyembunyikan/menampilkan `<section>` berdasarkan menu yang diklik:
-
-```javascript
-function setActiveView(navEl, viewEl) {
-    // Sembunyikan semua section
-    [viewDashboard, viewForecast, viewChat].forEach(v => v.classList.remove("active"));
-    // Tampilkan section yang dipilih
-    viewEl.classList.add("active");
-}
-```
+Dashboard sekarang disusun sebagai beberapa halaman terpisah (bukan satu SPA lagi): `static/dashboard/index.html`, `static/insight/insight.html`, `static/forecast/forecast.html`, dan `static/chat/chat.html`, masing-masing dengan JS-nya sendiri. Sidebar navigasinya sendiri jadi komponen yang dipakai bareng di semua halaman (`static/components/sidebar.html` + `sidebar.js`), jadi gak perlu ditulis ulang di tiap halaman.
 
 ### Tema Visual
 
@@ -571,4 +513,7 @@ Prophet membutuhkan **minimal 5 data point** (transaksi) untuk bisa melakukan fo
 | **Real-time stock data unavailable** | Tool `Check Stock` & `Get Low Stock` + Dashboard metrics + endpoint `/api/stock/low` |
 | **Difficulty tracking sparepart usage** | Tool `View Outgoing Stock` & `Get Top Users` + tabel Recent Outgoing di Dashboard |
 | **Inaccurate demand forecasting** | Facebook Prophet + Tool `Predict Monthly Needs` + halaman Forecasting dengan Chart.js |
-| **Manual report generation** | AI Assistant (chatbot) via Web & Telegram yang menjawab pertanyaan secara otomatis |
+| **Manual report generation** | AI Assistant (chatbot) via Web & Telegram + export laporan CSV async lewat `/api/reports/*` |
+| **Purchase order dibuat manual** | Tool `Draft Purchase Order` — qty ikut MOQ + estimasi biaya, otomatis dari restock alert |
+| **Gak ada visibilitas ke nilai stok/harga** | Tool `Get Price Insights` & `Estimate Item Price` |
+| **Gudang baru sadar stok kritis pas ditanya** | Notifikasi restock otomatis tiap pagi lewat Celery Beat → Telegram |
