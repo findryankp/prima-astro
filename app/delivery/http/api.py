@@ -1,10 +1,13 @@
-from fastapi import FastAPI
+import os
+from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from app.delivery.worker.tasks import process_query_task
-from app.usecase import dashboard_usecase, analytics_usecase
+from app.config import REPORTS_DIR
+from app.delivery.worker.celery_app import celery_app
+from app.delivery.worker.tasks import process_query_task, generate_report_task
+from app.usecase import dashboard_usecase, analytics_usecase, purchasing_usecase, pricing_usecase
 
 app = FastAPI(title="Agentic AI Sparepart Dashboard API")
 
@@ -80,3 +83,49 @@ async def get_forecast(item_query: str):
 async def get_insights():
     """Returns catalog-wide AI insights: restock alerts, usage trends, and total forecasted demand"""
     return analytics_usecase.get_dashboard_insights()
+
+
+@app.get("/api/purchase-orders/draft")
+async def get_draft_purchase_orders():
+    """Returns a draft PO recommendation (order qty + estimated cost) for items needing restock"""
+    return purchasing_usecase.draft_purchase_orders()
+
+
+@app.get("/api/pricing/insights")
+async def get_pricing_insights():
+    """Returns catalog-wide pricing insight: most expensive items and highest stock value items"""
+    return pricing_usecase.get_price_insights()
+
+
+@app.post("/api/reports/generate")
+def generate_report():
+    """Queues a background job (Celery) that builds a CSV insight report. Returns a task_id to poll."""
+    async_result = generate_report_task.delay()
+    return {"status": "queued", "task_id": async_result.id}
+
+
+@app.get("/api/reports/status/{task_id}")
+def get_report_status(task_id: str):
+    """Poll this with the task_id from /api/reports/generate to know when the CSV is ready."""
+    async_result = celery_app.AsyncResult(task_id)
+    if not async_result.ready():
+        return {"status": "pending"}
+
+    result = async_result.result
+    if isinstance(result, dict) and result.get("status") == "success":
+        return {"status": "done", "filename": result["filename"]}
+    message = result.get("message") if isinstance(result, dict) else str(result)
+    return {"status": "failed", "message": message}
+
+
+@app.get("/api/reports/download/{filename}")
+def download_report(filename: str):
+    """Downloads a previously generated CSV report by filename."""
+    if "/" in filename or "\\" in filename or ".." in filename:
+        raise HTTPException(status_code=400, detail="Invalid filename")
+
+    filepath = os.path.join(REPORTS_DIR, filename)
+    if not os.path.isfile(filepath):
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    return FileResponse(filepath, media_type="text/csv", filename=filename)

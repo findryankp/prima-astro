@@ -2,9 +2,13 @@
 
 Aplikasi AI untuk manajemen sparepart berbasis **CrewAI** dengan fitur:
 - **Web Dashboard** — Monitoring stok real-time, low stock alerts, dan demand forecasting (Prophet)
-- **AI Assistant** — Chatbot cerdas untuk query inventori menggunakan bahasa natural
+- **AI Assistant** — Chatbot cerdas untuk query inventori menggunakan bahasa natural, dilayani 5 agent spesialis (stok, transaksi, analitik, purchasing, harga)
 - **Telegram Bot** — Akses AI Assistant langsung dari Telegram
 - **Demand Forecasting** — Prediksi kebutuhan sparepart 30 hari ke depan menggunakan Facebook Prophet
+- **Draft Purchase Order** — Rekomendasi qty order (mengikuti MOQ) + estimasi biaya untuk item yang butuh restock
+- **Insight Harga** — Item termahal & item dengan nilai stok terbesar (soh x harga terakhir)
+- **Notifikasi Restock Otomatis** — Alert Telegram tiap pagi (Celery beat) kalau ada item kritis
+- **Export Laporan** — Generate CSV insight (restock, tren, draft PO) secara async lewat antrian
 
 ---
 
@@ -70,6 +74,10 @@ GEMINI_API_KEY=your_gemini_api_key_here
 # Wajib diisi jika ingin menjalankan Telegram Bot
 # Dapatkan token dari @BotFather di Telegram
 TELEGRAM_TOKEN=your_telegram_bot_token_here
+
+# Opsional — chat id tujuan notifikasi restock otomatis (dikirim tiap pagi
+# jam 7 lewat Celery beat). Kosongin aja kalau belum mau pakai fitur ini.
+TELEGRAM_ALERT_CHAT_ID=
 ```
 
 ### 5. Siapkan Database
@@ -147,7 +155,16 @@ python main.py
 
 Buka Telegram, cari bot Anda, dan mulai chat!
 
-> 💡 **Tips:** Anda perlu menjalankan Redis, Celery Worker (A), Web Dashboard (B), dan Telegram Bot (C) secara bersamaan di terminal yang berbeda. Semuanya berbagi antrian dan database yang sama, jadi setiap pertanyaan (dari web maupun Telegram) diproses satu per satu oleh worker.
+### D. Celery Beat (Opsional — untuk notifikasi restock otomatis)
+
+Kalau `TELEGRAM_ALERT_CHAT_ID` sudah diisi di `.env`, jalankan proses ini di terminal terpisah supaya alert stok kritis terkirim otomatis tiap pagi jam 7:
+
+```powershell
+.\venv\Scripts\activate
+celery -A celery_app beat --loglevel=info
+```
+
+> 💡 **Tips:** Anda perlu menjalankan Redis, Celery Worker (A), Web Dashboard (B), dan Telegram Bot (C) secara bersamaan di terminal yang berbeda. Celery Beat (D) sifatnya opsional. Semuanya berbagi antrian dan database yang sama, jadi setiap pertanyaan (dari web maupun Telegram) diproses satu per satu oleh worker.
 
 ---
 
@@ -174,18 +191,29 @@ agenticai/
 │   │   ├── stock_usecase.py
 │   │   ├── transaction_usecase.py
 │   │   ├── analytics_usecase.py    # Prophet forecast + insight (moving-average) — lihat detail di mekanisme.md
+│   │   ├── purchasing_usecase.py   # Draft PO dari restock alert, qty mengikuti MOQ
+│   │   ├── pricing_usecase.py      # Insight harga & nilai stok (soh x last_price)
+│   │   ├── notification_usecase.py # Kirim alert restock ke Telegram (dipanggil Celery beat)
+│   │   ├── report_usecase.py       # Generate CSV insight report (dipanggil async lewat queue)
 │   │   └── dashboard_usecase.py
 │   ├── agent/               # CrewAI: agent-agent spesialis + tools, tiap tool cuma manggil usecase
 │   │   ├── tools.py
-│   │   └── crew.py          # Manager agent (hierarchical) + Stock/Transaction/Analytics specialist agents
+│   │   ├── agents/           # Satu file per agent spesialis, biar nambah agent baru gak nyenggol yang lain
+│   │   │   ├── stock_agent.py
+│   │   │   ├── transaction_agent.py
+│   │   │   ├── analytics_agent.py
+│   │   │   ├── purchasing_agent.py
+│   │   │   └── pricing_agent.py
+│   │   └── crew.py          # Manager agent (hierarchical) yang delegasi ke ke-5 spesialis di atas
 │   └── delivery/            # Semua cara masuk ke usecase yang sama
 │       ├── http/api.py      # FastAPI routes
 │       ├── telegram/bot.py  # Telegram handlers
-│       └── worker/          # celery_app.py (Redis broker/backend) + tasks.py (Celery task)
+│       └── worker/          # celery_app.py (Redis broker/backend + beat schedule) + tasks.py (Celery tasks)
 │
 ├── requirements.txt       # Python dependencies
 ├── .env.example           # Template environment variables
 ├── .env                   # Environment variables (tidak di-commit)
+├── reports/                # CSV insight report hasil generate (tidak di-commit)
 └── static/
     ├── index.html          # Web Dashboard UI
     ├── style.css           # Dashboard styling (dark theme)

@@ -12,6 +12,9 @@ __pycache__/
 *.db
 *.sqlite3
 
+# Generated reports
+reports/
+
 # IDEs and Editors
 .vscode/
 .idea/

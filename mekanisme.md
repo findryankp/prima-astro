@@ -51,6 +51,8 @@ Dokumen ini menjelaskan secara lengkap bagaimana project **Prima Astro** bekerja
 │              │   • Stock Specialist     │                           │
 │              │   • Transaction Spec.    │                           │
 │              │   • Analytics Specialist │                           │
+│              │   • Purchasing Spec.     │                           │
+│              │   • Cost Insight Spec.   │                           │
 │              └──────────┬───────────────┘                           │
 │                         │  (lewat app/agent/tools.py)                │
 │          ┌──────────────┼──────────────────────┐                    │
@@ -214,8 +216,11 @@ Project ini menggunakan **CrewAI** sebagai framework orkestrasi AI. CrewAI terdi
 | `Analyze Sparepart Trend` | `app/usecase/analytics_usecase.py` | Menganalisis tren penggunaan: total pemakaian, rata-rata harian, proyeksi bulanan |
 | `Predict Monthly Needs` | `app/usecase/analytics_usecase.py` | Memprediksi kebutuhan 30 hari ke depan menggunakan algoritma Prophet |
 | `Get Dashboard Insights` | `app/usecase/analytics_usecase.py` | Insight katalog: item butuh restock, trending naik/turun, total forecast demand (moving-average) |
+| `Draft Purchase Order` | `app/usecase/purchasing_usecase.py` | Bikin draft PO dari restock alert — qty order minimal MOQ + estimasi biaya |
+| `Get Price Insights` | `app/usecase/pricing_usecase.py` | Item termahal & item dengan nilai stok terbesar (soh x last_price) katalog-wide |
+| `Estimate Item Price` | `app/usecase/pricing_usecase.py` | Harga terakhir + nilai stok untuk satu item spesifik |
 
-Tiap tool di atas hanyalah wrapper tipis (`app/agent/tools.py`) yang memanggil fungsi usecase yang sama persis dengan yang dipakai endpoint REST API — jadi chatbot dan dashboard REST selalu konsisten karena berbagi satu business logic.
+Tiap tool di atas hanyalah wrapper tipis (`app/agent/tools.py`) yang memanggil fungsi usecase yang sama persis dengan yang dipakai endpoint REST API — jadi chatbot dan dashboard REST selalu konsisten karena berbagi satu business logic. Tiap agent spesialis dirakit di file-nya sendiri di `app/agent/agents/`, jadi nambah agent baru gak perlu ubah `crew.py`.
 
 ---
 
@@ -428,6 +433,18 @@ FastAPI menyediakan beberapa endpoint:
 | `GET` | `/api/transactions/recent` | 10 transaksi keluar terbaru | `[{ tanggal, product_name, qty_out, ... }]` |
 | `GET` | `/api/items` | Daftar semua item + jumlah transaksi | `[{ item_number, product_name, tx_count }]` |
 | `GET` | `/api/forecast/{item}` | Data forecast Prophet untuk charting | `{ dates[], actual[], predicted[] }` |
+| `GET` | `/api/insights` | Insight katalog-wide (restock, tren, forecast total) | `{ status, restock_alerts[], trending_up[], trending_down[] }` |
+| `GET` | `/api/purchase-orders/draft` | Draft rekomendasi PO untuk item yang butuh restock | `{ status, total_estimated_cost, items[] }` |
+| `GET` | `/api/pricing/insights` | Item termahal & nilai stok terbesar | `{ status, total_stock_value, most_expensive_items[] }` |
+| `POST` | `/api/reports/generate` | Antrikan job pembuatan CSV insight report | `{ status: "queued", task_id }` |
+| `GET` | `/api/reports/status/{task_id}` | Cek status job report | `{ status, filename? }` |
+| `GET` | `/api/reports/download/{filename}` | Download CSV report yang sudah jadi | file CSV |
+
+Endpoint `/api/reports/*` sengaja dibikin async lewat Celery, bukan langsung diproses di request — supaya generate laporan (yang bisa nyentuh Prophet berkali-kali) gak nge-block thread FastAPI. Alur pemakaiannya: `POST /generate` → dapat `task_id` → poll `GET /status/{task_id}` sampai `status: "done"` → `GET /download/{filename}`.
+
+### Notifikasi Restock Otomatis (Celery Beat)
+
+Selain worker biasa, ada satu proses tambahan yang opsional: `celery -A celery_app beat`. Proses ini yang baca jadwal di `app/delivery/worker/celery_app.py` (`beat_schedule`) dan tiap jam 7 pagi ngirim task `send_restock_alert_task` ke antrian yang sama. Task itu manggil `notification_usecase.send_restock_alert()`, yang ngecek insight terbaru dan kalau ada item kritis, kirim ringkasannya ke Telegram lewat `TELEGRAM_ALERT_CHAT_ID`. Kalau env var itu kosong, task-nya tetap jalan tapi cuma di-skip (gak error).
 
 ---
 

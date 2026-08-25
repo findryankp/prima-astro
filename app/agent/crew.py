@@ -1,53 +1,13 @@
-from crewai import Agent, Task, Crew, Process
+from crewai import Task, Crew, Process
 from app.config import build_llm
-from app.agent.tools import (
-    check_stock_tool,
-    low_stock_tool,
-    outgoing_stock_tool,
-    top_users_tool,
-    analyze_trend_tool,
-    predict_needs_tool,
-    dashboard_insights_tool,
-)
+from app.agent.agents import build_all_agents
 
 selected_llm = build_llm()
 
-stock_agent = Agent(
-    role="Stock Specialist",
-    goal="Report accurate current stock levels (SOH) and flag items that are low, warning, or danger.",
-    backstory="You are an inventory clerk who knows the warehouse stock sheet by heart. "
-              "You only answer using the Check Stock and Get Low Stock Items tools. Never guess a number.",
-    verbose=True,
-    allow_delegation=False,
-    llm=selected_llm,
-    tools=[check_stock_tool, low_stock_tool],
-)
-
-transaction_agent = Agent(
-    role="Transaction Specialist",
-    goal="Report outgoing stock history and identify which department or PIC uses an item the most.",
-    backstory="You are a logistics analyst who tracks every outgoing transaction. "
-              "You only answer using the View Outgoing Stock and Get Top Users of Item tools.",
-    verbose=True,
-    allow_delegation=False,
-    llm=selected_llm,
-    tools=[outgoing_stock_tool, top_users_tool],
-)
-
-analytics_agent = Agent(
-    role="Analytics Specialist",
-    goal="Analyze usage trends and statistically forecast future monthly needs for a sparepart, "
-         "and surface catalog-wide restock/trend insights.",
-    backstory="You are a supply chain data scientist who uses historical transaction data and "
-              "Prophet-based forecasting to project future demand. You only answer using the "
-              "Analyze Sparepart Trend, Predict Monthly Needs, and Get Dashboard Insights tools.",
-    verbose=True,
-    allow_delegation=False,
-    llm=selected_llm,
-    tools=[analyze_trend_tool, predict_needs_tool, dashboard_insights_tool],
-)
-
-specialist_agents = [stock_agent, transaction_agent, analytics_agent]
+# Tiap agent dirakit di file-nya masing-masing (app/agent/agents/*.py) supaya
+# nambah spesialis baru gak perlu ngoprek file ini — tinggal daftarin di
+# app/agent/agents/__init__.py.
+specialist_agents = build_all_agents(selected_llm)
 
 
 def _build_crew(user_query: str) -> Crew:

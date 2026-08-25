@@ -20,7 +20,7 @@ def find_by_query(item_query: str) -> pd.DataFrame:
 def get_low_stock(limit: int = 20) -> pd.DataFrame:
     conn = sqlite3.connect(DB_NAME)
     sql = """
-    SELECT item_number, product_name, soh, safety_stock, unit, status
+    SELECT item_number, product_name, soh, safety_stock, unit, status, moq, last_price
     FROM spareparts
     WHERE status IN ('WARNING', 'DANGER')
     ORDER BY status DESC
@@ -46,6 +46,17 @@ def get_all() -> pd.DataFrame:
     conn = sqlite3.connect(DB_NAME)
     df = pd.read_sql_query(
         "SELECT item_number, product_name, soh, safety_stock, unit, status FROM spareparts", conn
+    )
+    conn.close()
+    return df
+
+
+def get_catalog_for_pricing() -> pd.DataFrame:
+    """Katalog lengkap plus MOQ & harga terakhir, dipakai buat hitung estimasi biaya restock dan insight harga."""
+    conn = sqlite3.connect(DB_NAME)
+    df = pd.read_sql_query(
+        "SELECT item_number, product_name, unit, soh, safety_stock, moq, last_price, kategori, status FROM spareparts",
+        conn,
     )
     conn.close()
     return df
