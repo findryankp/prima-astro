@@ -28,3 +28,8 @@ def get_recent_transactions() -> list:
 def get_items_list() -> list:
     df = sparepart_repository.get_items_with_tx_count()
     return _to_json_records(df)
+
+
+def get_usage_chart() -> dict:
+    return transaction_repository.get_usage_timeline()
+

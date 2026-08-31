@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prima Astro | Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Prima Astro | AI Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <link rel="stylesheet" href="/static/style.css">
+    <script src="/static/components/auth.js"></script>
     <script src="/static/components/sidebar.js"></script>
 </head>
 
@@ -20,32 +20,71 @@
 
         <!-- Main Content -->
         <main class="main-content">
-
-            <!-- Dashboard View -->
             <!-- Chatbot View -->
             <section id="view-chat" class="view-section active">
                 <header class="top-header">
-                    <h1>AI Assistant</h1>
-                    <p>Ask anything about inventory, trends, or predictions</p>
+                    <div>
+                        <h1>AI Assistant</h1>
+                        <p>Ask anything about inventory, usage trends, stockout risks, or draft purchase orders</p>
+                    </div>
+                    <div class="header-status-badge">
+                        <span class="status-dot"></span>
+                        <span>CrewAI Multi-Agent Online</span>
+                    </div>
                 </header>
 
-                <div class="chat-container glass-panel">
+                <div class="chat-container">
                     <div class="chat-messages" id="chat-messages">
                         <div class="message ai-message">
+                            <div class="message-avatar">🤖</div>
                             <div class="bubble">
-                                Hello! I am your Prima Astro Assistant. ✨<br><br>How can I help you today?
+                                Halo! Saya <strong>Prima Astro AI Assistant</strong>. ✨<br><br>
+                                Saya didukung oleh 5 agen spesialis (Stok, Transaksi, Analitik Forecasting, Purchasing & Harga). Ada yang bisa saya bantu terkait inventori hari ini?
                             </div>
                         </div>
                     </div>
+
+                    <!-- Quick suggestion prompt pills -->
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+                        <span class="prompt-chip" onclick="quickPrompt('Berapa sisa stock PALU KARET?')">🔍 Cek stok PALU KARET</span>
+                        <span class="prompt-chip" onclick="quickPrompt('Tampilkan barang dengan stok menipis')">⚠️ Stok menipis</span>
+                        <span class="prompt-chip" onclick="quickPrompt('Siapa yang sering ambil KAWAT LAS?')">👤 PIC KAWAT LAS</span>
+                        <span class="prompt-chip" onclick="quickPrompt('Buatkan draft PO untuk barang kritis')">📋 Draft PO</span>
+                    </div>
+
                     <div class="chat-input-area">
                         <input type="text" id="chat-input"
-                            placeholder="Type your query here... (e.g., 'Cek stok PALU KARET')">
-                        <button id="send-btn">Send</button>
+                            placeholder="Tulis pertanyaan Anda di sini... (contoh: 'Cek stok PALU KARET')">
+                        <button id="send-btn">
+                            <span>Kirim</span>
+                            <span>➔</span>
+                        </button>
                     </div>
                 </div>
             </section>
         </main>
     </div>
+
+    <style>
+        .prompt-chip {
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            color: #475569;
+            padding: 6px 12px;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .prompt-chip:hover {
+            background: #eef2ff;
+            border-color: #c7d2fe;
+            color: #4f46e5;
+            transform: translateY(-1px);
+        }
+    </style>
+
     <script src="/static/chat/chat.js"></script>
 </body>
 

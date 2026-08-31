@@ -137,12 +137,18 @@ uvicorn api:app --reload
 
 Buka browser dan akses: 👉 **http://localhost:8000**
 
+> 🔑 **Akun Login Dashboard:**
+> - **Username:** `admin`
+> - **Password:** `admin`
+
 Fitur yang tersedia di dashboard:
 | Menu | Fungsi |
 |------|--------|
 | **Dashboard** | Overview stok, low stock alerts, transaksi terbaru |
+| **Insight** | Catalog-wide forecast, restock alert & tren pemakaian |
 | **Forecasting** | Prediksi demand sparepart 30 hari ke depan (Prophet AI) |
 | **AI Assistant** | Chatbot cerdas untuk tanya jawab inventori |
+
 
 ### C. Telegram Bot
 

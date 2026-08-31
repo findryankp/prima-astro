@@ -1,16 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prima Astro | Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <title>Prima Astro | Demand Forecasting</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <link rel="stylesheet" href="/static/style.css">
+    <script src="/static/components/auth.js"></script>
     <script src="/static/components/sidebar.js"></script>
 </head>
 
@@ -20,27 +23,35 @@
 
         <!-- Main Content -->
         <main class="main-content">
-
-            <!-- Dashboard View -->
             <!-- Forecasting View -->
             <section id="view-forecast" class="view-section active">
                 <header class="top-header">
-                    <h1>Demand Forecasting</h1>
-                    <p>AI-powered future needs prediction using Prophet</p>
+                    <div>
+                        <h1>Demand Forecasting</h1>
+                        <p>AI-powered future needs prediction using Facebook Prophet Engine</p>
+                    </div>
+                    <div class="header-status-badge">
+                        <span class="status-dot"></span>
+                        <span>Prophet AI Ready</span>
+                    </div>
                 </header>
 
-                <div class="forecast-controls glass-panel">
-                    <select id="item-select" class="premium-select">
-                        <option value="">Loading items...</option>
-                    </select>
-                    <button id="btn-forecast" class="premium-btn">Generate Forecast</button>
+                <div class="forecast-controls">
+                    <div style="flex-grow: 1; min-width: 320px;">
+                        <select id="item-select" class="premium-select">
+                            <option value="">Memuat daftar sparepart...</option>
+                        </select>
+                    </div>
+                    <button id="btn-forecast" class="premium-btn">
+                        <span>✨ Generate Forecast</span>
+                    </button>
                 </div>
 
                 <div id="forecast-loading" style="display: none;" class="loading-state">
-                    <p>Calculating Prophet forecast... ✨</p>
+                    <p>⏳ Sedang menghitung prediksi konsumsi Prophet 30 hari ke depan... Mohon tunggu.</p>
                 </div>
 
-                <div class="chart-container glass-panel" style="margin-top: 20px; position: relative; height: 50vh;">
+                <div class="glass-panel" style="margin-top: 24px; padding: 24px; position: relative; height: 55vh; min-height: 400px;">
                     <canvas id="forecastChart"></canvas>
                 </div>
             </section>

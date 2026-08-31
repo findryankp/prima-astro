@@ -22,3 +22,9 @@ async def read_forecast():
 async def read_chat():
     with open("static/chat/chat.html", "r", encoding="utf-8") as f:
         return f.read()
+
+@web_router.get("/login", response_class=HTMLResponse)
+async def read_login():
+    with open("static/login/login.html", "r", encoding="utf-8") as f:
+        return f.read()
+

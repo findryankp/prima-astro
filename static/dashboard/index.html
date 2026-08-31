@@ -1,16 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prima Astro | Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <link rel="stylesheet" href="/static/style.css">
+    <script src="/static/components/auth.js"></script>
     <script src="/static/components/sidebar.js"></script>
 </head>
 
@@ -24,62 +25,114 @@
             <!-- Dashboard View -->
             <section id="view-dashboard" class="view-section active">
                 <header class="top-header">
-                    <h1>Overview</h1>
-                    <p>Real-time sparepart monitoring & analytics</p>
+                    <div>
+                        <h1>Overview</h1>
+                        <p>Real-time sparepart monitoring & inventory analytics</p>
+                    </div>
+                    <div class="header-status-badge">
+                        <span class="status-dot"></span>
+                        <span>System Live</span>
+                    </div>
                 </header>
 
                 <!-- Metrics Cards -->
                 <div class="metrics-grid">
-                    <div class="metric-card glass-panel">
-                        <h3>Total Items</h3>
+                    <div class="metric-card">
+                        <div class="card-head">
+                            <h3>Total Items</h3>
+                            <div class="metric-icon">📦</div>
+                        </div>
                         <p class="value" id="stat-total">-</p>
+                        <p class="desc">Active spareparts in catalog</p>
                     </div>
-                    <div class="metric-card glass-panel warning-card">
-                        <h3>Low Stock Alerts</h3>
+
+                    <div class="metric-card warning-card">
+                        <div class="card-head">
+                            <h3>Low Stock Alerts</h3>
+                            <div class="metric-icon">⚠️</div>
+                        </div>
                         <p class="value" id="stat-low">-</p>
+                        <p class="desc">Items below safety stock</p>
                     </div>
-                    <div class="metric-card glass-panel">
-                        <h3>Total Transactions</h3>
+
+                    <div class="metric-card success-card">
+                        <div class="card-head">
+                            <h3>Total Transactions</h3>
+                            <div class="metric-icon">🔄</div>
+                        </div>
                         <p class="value" id="stat-tx">-</p>
+                        <p class="desc">Recorded item movements</p>
                     </div>
                 </div>
 
+                <!-- Minimalist Usage Bar Chart (No grid, no axes, with total on top) -->
+                <div class="glass-panel" style="padding: 16px 20px; margin-bottom: 20px; background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-md); box-shadow: var(--shadow-sm);">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 8px;">
+                        <div>
+                            <div style="font-size: 0.76rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Pengeluaran Penggunaan Sparepart</div>
+                            <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 2px;">
+                                <span id="chart-total-usage" style="font-size: 1.45rem; font-weight: 700; color: var(--text-main);">-</span>
+                                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">Total unit terpakai</span>
+                            </div>
+                        </div>
+                        <div style="font-size: 0.72rem; color: #4f46e5; background: #eef2ff; padding: 3px 10px; border-radius: 9999px; font-weight: 600;">
+                            📊 Tren Penggunaan
+                        </div>
+                    </div>
+                    <div style="height: 85px; width: 100%; position: relative;">
+                        <canvas id="usageBarChart"></canvas>
+                    </div>
+                </div>
+
+
                 <!-- Tables Grid -->
                 <div class="tables-grid">
-                    <div class="table-container glass-panel">
-                        <h3>⚠️ Low Stock Warnings</h3>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Item Number</th>
-                                    <th>Product Name</th>
-                                    <th>SOH</th>
-                                    <th>Safety</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="table-low-stock">
-                                <!-- Populated by JS -->
-                            </tbody>
-                        </table>
+                    <div class="table-container">
+                        <div class="table-header-row">
+                            <h3>⚠️ Low Stock Warnings</h3>
+                        </div>
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Item Number</th>
+                                        <th>Product Name</th>
+                                        <th>SOH</th>
+                                        <th>Safety</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-low-stock">
+                                    <tr>
+                                        <td colspan="5" style="text-align: center; color: #94a3b8; padding: 24px;">Memuat data stok...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
-                    <div class="table-container glass-panel">
-                        <h3>🔄 Recent Outgoing</h3>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Product</th>
-                                    <th>Qty</th>
-                                    <th>Dept</th>
-                                    <th>PIC</th>
-                                </tr>
-                            </thead>
-                            <tbody id="table-recent-tx">
-                                <!-- Populated by JS -->
-                            </tbody>
-                        </table>
+                    <div class="table-container">
+                        <div class="table-header-row">
+                            <h3>🔄 Recent Outgoing</h3>
+                        </div>
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Product</th>
+                                        <th>Qty</th>
+                                        <th>Dept</th>
+                                        <th>PIC</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-recent-tx">
+                                    <tr>
+                                        <td colspan="5" style="text-align: center; color: #94a3b8; padding: 24px;">Memuat transaksi...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </section>

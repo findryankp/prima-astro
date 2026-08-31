@@ -69,3 +69,27 @@ def count_all() -> int:
     count = pd.read_sql_query("SELECT COUNT(*) as count FROM transactions", conn)["count"].iloc[0]
     conn.close()
     return int(count)
+
+
+def get_usage_timeline() -> dict:
+    """Returns periodic usage aggregation for dashboard bar chart."""
+    conn = sqlite3.connect(DB_NAME)
+    sql = """
+    SELECT 
+        substr(tanggal, 1, 7) as period,
+        SUM(qty_out) as total_out
+    FROM transactions
+    WHERE tanggal IS NOT NULL AND tanggal != '' AND qty_out > 0
+    GROUP BY period
+    ORDER BY period ASC
+    """
+    df = pd.read_sql_query(sql, conn)
+    conn.close()
+
+    total_all = float(df["total_out"].sum()) if not df.empty else 0.0
+    return {
+        "periods": df["period"].tolist() if not df.empty else [],
+        "totals": [float(x) for x in df["total_out"].tolist()] if not df.empty else [],
+        "total_all": total_all
+    }
+

@@ -1,20 +1,41 @@
-<aside class="sidebar glass-panel">
+<aside class="sidebar">
     <div class="logo">
-        <h2>✨ Prima<span>Astro</span></h2>
+        <div class="logo-badge">✨</div>
+        <div>
+            <h2>Prima <span>Astro</span></h2>
+            <span class="tagline">Agentic AI Management</span>
+        </div>
     </div>
     <nav>
         <ul>
-            <li id="nav-dashboard" onclick="window.location.href='/'" style="cursor: pointer;">Dashboard</li>
-            <li id="nav-insight" onclick="window.location.href='/insight'" style="cursor: pointer;">Insight</li>
-            <li id="nav-forecast" onclick="window.location.href='/forecast'" style="cursor: pointer;">Forecasting</li>
-            <li id="nav-chat" onclick="window.location.href='/chat'" style="cursor: pointer;">AI Assistant</li>
+            <li id="nav-dashboard" onclick="window.location.href='/'">
+                <span class="nav-icon">📊</span>
+                <span>Dashboard</span>
+            </li>
+            <li id="nav-insight" onclick="window.location.href='/insight'">
+                <span class="nav-icon">💡</span>
+                <span>AI Insight</span>
+            </li>
+            <li id="nav-forecast" onclick="window.location.href='/forecast'">
+                <span class="nav-icon">📈</span>
+                <span>Forecasting</span>
+            </li>
+            <li id="nav-chat" onclick="window.location.href='/chat'">
+                <span class="nav-icon">🤖</span>
+                <span>AI Assistant</span>
+            </li>
         </ul>
     </nav>
     <div class="user-profile">
-        <div class="avatar">👨‍💻</div>
-        <div class="info">
-            <p class="name">Admin</p>
-            <p class="role">Sparepart Manager</p>
+        <div class="user-profile-info">
+            <div class="avatar" id="sidebar-user-avatar">👨‍💼</div>
+            <div class="info">
+                <p class="name" id="sidebar-user-name">Admin</p>
+                <p class="role" id="sidebar-user-role">Sparepart Manager</p>
+            </div>
         </div>
+        <button class="btn-logout" id="btn-sidebar-logout" onclick="Auth.logout()" title="Keluar / Logout">
+            🚪
+        </button>
     </div>
 </aside>

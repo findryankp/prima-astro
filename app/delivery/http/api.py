@@ -49,7 +49,13 @@ async def get_dashboard_stats():
     """Returns high level metrics for the dashboard"""
     return dashboard_usecase.get_stats()
 
+@app.get("/api/dashboard/usage-chart")
+async def get_usage_chart():
+    """Returns usage breakdown for dashboard sparkline/bar chart"""
+    return dashboard_usecase.get_usage_chart()
+
 @app.get("/api/stock/low")
+
 async def get_low_stock():
     """Returns a list of items with low stock"""
     return dashboard_usecase.get_low_stock_table()

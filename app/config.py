@@ -20,10 +20,19 @@ TELEGRAM_ALERT_CHAT_ID = os.getenv("TELEGRAM_ALERT_CHAT_ID")
 REPORTS_DIR = os.getenv("REPORTS_DIR", "reports")
 
 
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+
+# Ensure LiteLLM uses Google Gemini v1beta endpoint where gemini-1.5-flash / gemini-2.0 is supported
+os.environ.setdefault("GEMINI_API_VERSION", "v1beta")
+
+
 def build_llm() -> LLM:
     """Build the CrewAI LLM client for whichever provider is configured in .env."""
 
     if LLM_PROVIDER == "gemini":
-        return LLM(model="gemini/gemini-2.5-flash", temperature=0.5)
+        model_name = GEMINI_MODEL if GEMINI_MODEL.startswith("gemini/") else f"gemini/{GEMINI_MODEL}"
+        return LLM(model=model_name, api_version="v1beta", temperature=0.5)
         
     return LLM(model="ollama/llama3.1", base_url="http://localhost:11434")
+
+
